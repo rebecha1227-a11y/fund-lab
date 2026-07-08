@@ -58,6 +58,7 @@
 
 ## 三、落盘动作（首次会话结束前应完成）
 
+0. 若用户尚未安装 skill，提示执行：`npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y`
 1. 从 `templates/portfolio-template.example.md` 复制为 `assets/portfolio-template.md`（若尚无）
 2. 填写「基本情况」「持仓明细」「赌注群汇总」「定投计划」
 3. 初始化 `assets/daily-snapshots.md`（从 `templates/daily-snapshots.example.md` 复制表头）

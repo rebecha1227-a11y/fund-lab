@@ -53,7 +53,16 @@ metadata:
 
 安装后从 `templates/*.example.md` 复制为 `assets/` 下正式文件（见 `README.md`）。  
 可将 `dashboard.html` 放在工作区根目录，或直接从 skill 目录打开（见下）。  
-**Cursor 用户**：skill 在全局 `~/.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。开发者改 skill 后运行 `scripts/sync-skill-to-global.sh`。
+
+**安装（推荐）**：
+
+```bash
+npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y
+```
+
+**更新**：`npx skills update`  
+
+**Cursor 用户**：skill 在全局 `~/.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。维护者本地改完正本可运行 `scripts/sync-skill-to-global.sh`。
 
 ### 看板怎么用
 
