@@ -1,229 +1,158 @@
 # Fund Lab · 基金实验室
 
-面向基金小白的 **AI 投资学习陪练** + **本地 HTML 看板**。  
-不连接任何基金账户 API；你的持仓与收益写在本地 Markdown 里，看板负责读取展示。
+面向基金小白的 **AI 投资学习陪练**，附带一个 **本地 HTML 看板**。
+
+帮你把持仓、收益、纪律、复盘整理成自己电脑上的 Markdown 档案，用 AI 做透视、周报、快照更新；看板负责把这一切可视化。**不连接任何基金账户 API**。
 
 > **免责声明**：仅供学习与研究框架，不构成投资建议，最终决策权在你自己。
 
 ---
 
-## 安装 Skill（推荐：一行命令）
+## 你能用它做什么
 
-Fund Lab 已发布到 GitHub，可用 [Skills CLI](https://github.com/vercel-labs/skills) 安装，**Cursor / Claude Code / Codex 等 70+ Agent 都能识别**。
+| 能力 | 说明 |
+|------|------|
+| 持仓透视 | 看清组合结构、缺口与风险集中度 |
+| 亏损体检 | 分析「基金赚了但我亏了」的原因 |
+| 市场周报 | 每周环境简报，对照自己的组合 |
+| 每日快照 | 记录当日收益，驱动看板日历/曲线 |
+| 投资纪律 | 止盈止损、加仓规则，写下来并跟踪 |
+| 复盘日记 | 记录心态与决策，支持心情标签 |
+| 基金词典 | 小白术语 + 你的个性化笔记 |
+| 本地看板 | 收益日历、KPI、知识中枢，一键浏览 |
 
-### Cursor 用户（最常用）
+---
+
+## 安装
+
+需要已安装 [Node.js](https://nodejs.org/)（用于运行 `npx`）。
+
+使用 [Skills CLI](https://github.com/vercel-labs/skills) 一行安装，支持 **Cursor、Claude Code、Codex** 等主流 AI Agent：
 
 ```bash
+# Cursor（最常用）
 npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y
 ```
 
-装好后 skill 在 `~/.cursor/skills/fund-lab/`，包含：
-
-- `SKILL.md` — Agent 读的方法论
-- `references/`、`templates/` — 流程说明与空白模板
-- `dashboard.html` — **本地看板（与 GitHub 仓库同步的最新版）**
-
-### 其他 AI 工具
-
 ```bash
-# Claude Code
+# 其他工具（按需选一个）
 npx skills add rebecha1227-a11y/fund-lab -g -a claude-code -y
-
-# Codex
 npx skills add rebecha1227-a11y/fund-lab -g -a codex -y
-
-# 一次装给多个 Agent
-npx skills add rebecha1227-a11y/fund-lab -g -a cursor -a claude-code -y
 ```
 
-完整 GitHub 地址写法也可以：
+安装完成后，skill 位于：
 
-```bash
-npx skills add https://github.com/rebecha1227-a11y/fund-lab -g -a cursor -y
-```
+- **macOS / Linux**：`~/.cursor/skills/fund-lab/`（Cursor）
+- 内含：`SKILL.md`、`references/`、`templates/`、**`dashboard.html`（看板）**
 
-### 更新到最新版
+### 更新
 
 ```bash
 npx skills update
 ```
 
-或重新执行上面的 `npx skills add ...`（会覆盖旧版）。
-
-### 克隆完整仓库（可选）
-
-若你想把 **skill + 私人 `assets/` 数据** 放在同一个文件夹里开发/备份：
-
-```bash
-git clone https://github.com/rebecha1227-a11y/fund-lab.git
-cd fund-lab
-```
-
-克隆后仍建议执行一次 `npx skills add ...`，让 Cursor 全局能自动识别 `/fund-lab`。
-
 ---
 
-## 项目结构（开发者 / 贡献者）
+## 快速开始
 
-本项目 = **skill 开发正本** + **你的私人笔记本**。  
-开源仓推送到 GitHub；用户通过 `npx skills add rebecha1227-a11y/fund-lab` 安装到 Agent 全局目录。  
-**维护者**改根目录 `SKILL.md`、`references/`、`templates/`、`dashboard.html` 后 push GitHub；用户 `npx skills update` 即可拿到新版看板。
+### 第 1 步：准备你的工作区文件夹
+
+在电脑上新建或选一个文件夹，例如 `我的基金档案`，用 Cursor **打开这个文件夹**。
+
+你的私人数据都会放在这里的 `assets/` 目录，**不会上传到 GitHub**。
+
+### 第 2 步：初始化
+
+在 Cursor 聊天框输入：
 
 ```
-投资研究复盘预测模拟/                 ← 工作区（开源仓 + 私人 assets）
-├── SKILL.md                         ← 【正本】
-├── references/                      ← 【正本】
-├── templates/                       ← 【正本】
-├── dashboard.html                   ← 【正本】看板（含全部 JS 联动逻辑）
-├── scripts/sync-skill-to-global.sh
-├── assets/                          ← 【仅私人】
-└── QA_Log.md
-
-~/.cursor/skills/fund-lab/           ← Cursor 全局 skill 包（sync 后含 dashboard.html）
-    ├── SKILL.md
-    ├── references/
-    ├── templates/
-    └── dashboard.html
+/fund-lab 初始化
 ```
 
-### 三层职责
+AI 会引导你说明：在哪些平台买基、持有哪些基金、收益从哪个 App 看，并帮你在 `assets/` 里建好档案。
 
-| 层级 | 目录 | 内容 | 提交 GitHub |
-|------|------|------|-------------|
-| **方法论 + 看板** | `references/`、`dashboard.html` | 流程说明 + HTML 看板（只读展示） | ✅ |
-| **安装模板** | `templates/` | 空白 `.example.md`，复制到 `assets/` 后填写 | ✅ |
-| **私人数据** | `assets/` + `QA_Log.md` | 持仓、收益、周报、词典、穿透研究 | ❌ |
+> 也可以手动从 skill 里的 `templates/*.example.md` 复制到 `assets/` 后改名填写；但让 AI 带你走一遍更省事。
 
-### AI 改文件时的规则
-
-| 任务 | 只改这些 |
-|------|----------|
-| 改 skill、看板、模板 | 根目录 `SKILL.md`、`references/`、`templates/`、`dashboard.html` → sync |
-| 更新你的持仓、周报、词典 | `assets/`、`QA_Log.md` |
-| 改看板读取逻辑 | `dashboard.html` |
-
-**禁止**：把真实基金名、金额、持仓写进 `references/` 或 skill 目录。
-
-### 同步到 Cursor 全局（维护者本地开发用）
-
-改完正本后，可手动同步（与 `npx skills add` 效果类似）：
+### 第 3 步：打开看板
 
 ```bash
-./scripts/sync-skill-to-global.sh
-```
-
-普通用户请直接用上面的 `npx skills add` / `npx skills update`，无需本脚本。
-
----
-
-## 第一次使用（5 步）
-
-### 1. 安装 Skill
-
-**推荐（一行命令，适用 Cursor / Claude Code / Codex 等）**
-
-```bash
-npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y
-```
-
-**Cursor 用户接着：**
-
-1. 用 Cursor 打开**你的工作区文件夹**（下面要建私人 `assets/` 的目录，可与克隆的仓库相同，也可以是任意文件夹）
-2. 聊天输入：`/fund-lab 初始化`
-
-**其他 AI 工具**：把 skill 装到对应 Agent 后，用自然语言说「按 fund-lab 初始化」。
-
-### 2. 准备私人数据文件
-
-```bash
-mkdir -p assets/weekly-briefs assets/review-journal assets/fund-research
-cp templates/portfolio-template.example.md assets/portfolio-template.md
-cp templates/daily-snapshots.example.md assets/daily-snapshots.md
-cp templates/discipline-rules.example.md assets/discipline-rules.md
-cp templates/personal-glossary.example.md assets/personal-glossary.md
-# 周报不需预先复制：首次 /fund-lab 环境 时 AI 会按 templates/weekly-brief.example.md 写入 assets/weekly-briefs/日期.md
-```
-
-### 3. 告诉 AI 你的情况（`/fund-lab 初始化`）
-
-按 `references/onboarding.md` 提供：交易平台、持仓截图/清单、收益从哪个 App 看。
-
-### 4. 打开看板
-
-看板在 **skill 包内**（`~/.cursor/skills/fund-lab/dashboard.html`），也可使用工作区根目录的 `dashboard.html` 副本（内容应一致）。
-
-```bash
-# 方式 A：从 skill 包打开（推荐，始终最新 sync 版）
 open ~/.cursor/skills/fund-lab/dashboard.html
-# 方式 B：本地起服务打开工作区副本
-python3 -m http.server 4173
-# 浏览器 http://localhost:4173/dashboard.html
 ```
 
-**必做**：看板里点击「授权项目目录」→ 选择**本工作区文件夹**（含 `assets/` 的目录）。  
-看板内嵌解析与联动（`loadFromDirectory`、`parseAll`、收益日历/曲线等），只读 md，不连基金 API。
+或在 Finder 中双击该文件用浏览器打开。
 
-### 5. 常用命令
+**重要**：看板里点击 **「授权项目目录」**，选择第 1 步那个含 `assets/` 的文件夹。  
+之后 AI 更新 Markdown，在看板点「立即刷新」即可看到最新数据。
+
+### 第 4 步：日常使用
 
 ```
-/fund-lab 透视
-/fund-lab 环境          → 写入 assets/weekly-briefs/YYYY-MM-DD.md
-/fund-lab 更新今日快照
-/fund-lab 复盘          → 写入 assets/review-journal/YYYY-MM-DD.md
+/fund-lab 透视              # 看持仓结构与缺口
+/fund-lab 环境              # 生成本周市场简报
+/fund-lab 更新今日快照       # 写入今日收益
+/fund-lab 复盘              # 写复盘日记
+/fund-lab 更新持仓           # 买卖后更新持仓
 ```
+
+完整命令列表见 skill 内的 `SKILL.md`。
 
 ---
 
-## 看板读什么
+## 看板有哪些板块
 
-| 看板板块 | 数据来源 |
-|----------|---------|
-| KPI / 收益日历 / 曲线 | `assets/daily-snapshots.md` + `assets/portfolio-template.md` |
+| 板块 | 读什么文件 |
+|------|-----------|
+| 首页 · 持仓总览 / 收益日历 | `assets/portfolio-template.md`、`assets/daily-snapshots.md` |
 | 基金市场周报 | `assets/weekly-briefs/*.md` |
-| 知识中枢 · QA | `QA_Log.md` |
-| 知识中枢 · 穿透研究 | `assets/fund-research/*.md` |
-| 知识中枢 · 相关词汇 | `references/fund-glossary.md` + `assets/personal-glossary.md` + QA |
+| 知识中枢 · 个人基金知识库 | `QA_Log.md`（工作区根目录） |
+| 知识中枢 · 术语词典 | `references/fund-glossary.md` + `assets/personal-glossary.md` |
 | 知识中枢 · 复盘日记 | `assets/review-journal/*.md` |
-| 纪律 / 建议 | `assets/discipline-rules.md` + 持仓解析 |
+| 知识中枢 · 穿透研究 | `assets/fund-research/*.md` |
+| 投资纪律 | `assets/discipline-rules.md` |
+
+看板**只读**本地文件，不联网查净值。
 
 ---
 
-## 数据文件说明
+## 你的数据存在哪
 
-| 文件 | 更新频率 | 谁写 |
-|------|----------|------|
-| `assets/portfolio-template.md` | 交易后 | 你 + AI `/更新持仓` |
-| `assets/daily-snapshots.md` | 每交易日 | AI `/更新今日快照` |
-| `assets/weekly-briefs/日期.md` | 每周 | AI `/环境` |
-| `assets/review-journal/日期.md` | 按需 | AI `/复盘` 或看板手写 |
-| `assets/fund-research/*.md` | 按需 | AI `/透视` 某只基金后 |
-| `assets/personal-glossary.md` | 随学习 | AI `/词典` 或聊天 |
+所有私人信息都在**你自己电脑的工作区**里：
 
----
+```
+你的工作区/
+├── assets/
+│   ├── portfolio-template.md    # 持仓（慢变量）
+│   ├── daily-snapshots.md       # 每日收益（快变量）
+│   ├── discipline-rules.md      # 纪律守则
+│   ├── personal-glossary.md     # 你的词典
+│   ├── weekly-briefs/           # 周报
+│   ├── review-journal/          # 复盘日记
+│   └── fund-research/           # 基金研究报告
+└── QA_Log.md                    # 学习问答沉淀（可选）
+```
 
-## 开源前检查清单
-
-推 GitHub 前确认：
-
-- [ ] 根目录 `SKILL.md`、`references/`、`templates/` 无真实持仓/基金名
-- [ ] 用户可通过 `npx skills add rebecha1227-a11y/fund-lab` 正常安装
-- [ ] 未提交 `QA_Log.md`、`assets/` 下私人文件
+**请勿**把 `assets/` 和 `QA_Log.md` 上传到公开仓库或发给他人。
 
 ---
 
-## 自动化（可选）
+## 常见问题
 
-看板只**读**本地 md；每日更新需要「写层」：
+**Q：一定要克隆 GitHub 仓库吗？**  
+不用。`npx skills add` 就够了。克隆仓库只适合想顺便用 git 备份私人数据的人。
 
-- Cursor Automation + cron：定时跑「读 inbox 截图 → 更新 daily-snapshots」
-- 或手动：聊天 `/fund-lab 更新今日快照`
+**Q：看板打开是空的？**  
+先完成「授权项目目录」，并确认该文件夹里已有 `assets/` 且文件已填写。
 
-详见 `references/daily-snapshot.md`。
+**Q：换了电脑怎么办？**  
+复制整个工作区文件夹（含 `assets/`）到新电脑，重新 `npx skills add ...` 安装 skill，再授权目录即可。
+
+**Q：和其他 AI 工具能用吗？**  
+可以。用对应的 `-a` 参数安装 skill，用自然语言说「按 fund-lab 帮我透视」等即可，不必有 `/fund-lab` 斜杠命令。
 
 ---
 
-## 许可与隐私
+## 许可
 
-- Skill 代码与方法论：MIT（见 `SKILL.md`）
-- `assets/`、`QA_Log.md`：**仅留本地或私有仓**，勿公开
-- 虚构穿透范例：`references/examples/sample-active-equity-research.md`
+MIT License · 见 [SKILL.md](./SKILL.md)
+
+虚构基金研究范例见 `references/examples/`，仅供学习格式参考。
