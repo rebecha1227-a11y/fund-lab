@@ -1,0 +1,4374 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fund-Lab 看板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #9fe870;
+      --primary-active: #cdffad;
+      --primary-pale: #e2f6d5;
+      --primary-neutral: #c5edab;
+      --on-primary: #0e0f0c;
+      --ink: #0e0f0c;
+      --ink-deep: #163300;
+      --body: #454745;
+      --mute: #868685;
+      --canvas: #ffffff;
+      --canvas-soft: #e8ebe6;
+      --page-bg: #fafbf9;
+      --hairline: #d4d9d0;
+      --positive: #2ead4b;
+      --positive-deep: #054d28;
+      --positive-pale: #e2f6d5;
+      --negative: #d03238;
+      --negative-deep: #a72027;
+      --negative-pale: #fde8e8;
+      --warning: #ffd11a;
+      --warning-deep: #b86700;
+      --warning-content: #4a3b1c;
+      --warning-pale: #fff8d6;
+      --accent-peach: #ffc091;
+      --accent-peach-pale: #ffe8d6;
+      --accent-cyan: #38c8ff;
+      --accent-cyan-pale: #e8f7ff;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-pill: 9999px;
+      /* legacy aliases */
+      --surface: var(--canvas);
+      --ink-soft: var(--body);
+      --carbon: var(--ink);
+      --chrome-indigo: var(--ink);
+      --canvas-legacy: var(--canvas-soft);
+      --platinum: var(--canvas-soft);
+      --ok: var(--positive);
+      --bad: var(--negative);
+      --warn: var(--warning-deep);
+      --signal: var(--primary);
+      --amber: var(--primary-neutral);
+      --nav-gold: var(--ink);
+      --periwinkle: var(--primary-pale);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      width: min(1180px, 96vw);
+      margin: 16px auto 32px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--canvas);
+      color: var(--ink);
+      padding: 14px 20px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-xl);
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .brand {
+      font-family: Manrope, system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .meta { font-size: 12px; color: var(--mute); font-weight: 500; }
+
+    .subbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--ink);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      cursor: pointer;
+      border-radius: var(--radius-xl);
+      transition: background .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .tab-btn:hover:not(.active) {
+      background: var(--warning-pale);
+      border-color: var(--warning-deep);
+      color: var(--warning-content);
+    }
+    .tab-btn[data-tab="report"]:hover:not(.active),
+    .tab-btn[data-tab="settings"]:hover:not(.active) {
+      background: var(--accent-peach-pale);
+      border-color: #d4a574;
+      color: var(--ink);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    .content { padding: 0; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.9fr 1.1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card {
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .card > .card-header:first-child {
+      border-top-left-radius: calc(var(--radius-xl) - 1px);
+      border-top-right-radius: calc(var(--radius-xl) - 1px);
+    }
+    .card > .card-body:last-child {
+      border-bottom-left-radius: calc(var(--radius-xl) - 1px);
+      border-bottom-right-radius: calc(var(--radius-xl) - 1px);
+    }
+    .card > .card-body:only-child {
+      border-radius: calc(var(--radius-xl) - 1px);
+    }
+
+    .card-header {
+      margin: 0;
+      background: var(--canvas-soft);
+      color: var(--ink);
+      border-bottom: 1px solid var(--hairline);
+      font-family: Manrope, system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 12px 16px;
+      text-transform: none;
+      letter-spacing: -0.01em;
+    }
+    .card-body { padding: 16px; }
+
+    .hero {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-family: Manrope, system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .hero-sub { font-size: 12px; color: var(--mute); }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .kpi:nth-child(3n+1) { background: var(--canvas-soft); }
+    .kpi:nth-child(3n+2) { background: var(--warning-pale); }
+    .kpi:nth-child(3n) { background: var(--accent-peach-pale); }
+    .kpi {
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+    .kpi .label { font-size: 10px; color: var(--mute); font-weight: 600; }
+    .kpi .value { font-size: 17px; margin-top: 4px; font-weight: 800; color: var(--ink); }
+    .kpi .value.profit-up { color: var(--negative); }
+    .kpi .value.profit-down { color: var(--positive-deep); }
+    .kpi .sub { font-size: 11px; margin-top: 2px; color: var(--body); }
+
+    .good { color: var(--positive); }
+    .warn { color: var(--warning-deep); }
+    .bad { color: var(--negative); }
+    .profit-up { color: var(--negative); }
+    .profit-down { color: var(--positive-deep); }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .mini-table th, .mini-table td {
+      border-bottom: 1px solid #d7dcf0;
+      padding: 7px 6px;
+      vertical-align: top;
+      text-align: left;
+    }
+    .mini-table th {
+      background: #f1f4ff;
+      font-size: 10px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .actions-list { display: grid; gap: 8px; }
+    .actions-list.compact {
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .action-item {
+      border: 1px solid #cfd5ea;
+      background: #fbfcff;
+      padding: 8px;
+    }
+    .action-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0; }
+    .chip {
+      font-size: 10px;
+      background: var(--primary-pale);
+      color: var(--ink-deep);
+      padding: 3px 8px;
+      border: none;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+    }
+    .chip.watch { background: var(--warning-pale); color: var(--warning-content); }
+    .chip.learn { background: var(--accent-peach-pale); color: var(--ink); }
+    .chip.action { background: var(--accent-cyan-pale); color: var(--ink-deep); }
+
+    .timeline {
+      max-height: 430px;
+      overflow: auto;
+      border: 1px solid #ccd4ed;
+      background: #fdfdff;
+    }
+    .timeline-item {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e2e7f6;
+      cursor: pointer;
+    }
+    .timeline-item:hover { background: var(--warning-pale); }
+    .timeline-date { font-size: 10px; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; }
+    .timeline-title { font-size: 12px; margin-top: 3px; }
+
+    .detail {
+      max-height: 430px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #fbfcff;
+      border: 1px solid #ccd4ed;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .brief-list {
+      display: grid;
+      gap: 8px;
+      max-height: 320px;
+      overflow: auto;
+    }
+    .brief-item {
+      border: 1px solid #ccd4ed;
+      background: #f8faff;
+      padding: 8px;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .brief-item:hover {
+      background: var(--accent-cyan-pale);
+      transform: translateY(-1px);
+    }
+    .brief-date {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #4d5b8f;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .brief-summary {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #1f2c55;
+      line-height: 1.45;
+    }
+    .brief-summary p { margin: 0; }
+
+    .todo-wrap { display: grid; gap: 6px; }
+    .todo-row {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid #d1d8ef;
+      background: #fbfcff;
+      padding: 7px;
+    }
+    .todo-row.done { opacity: .72; background: #f2f5ff; }
+    .todo-row label { font-size: 12px; line-height: 1.45; cursor: pointer; }
+    .todo-row label p { margin: 0; }
+    .todo-row label ul,
+    .todo-row label ol { margin: 4px 0 0 16px; }
+
+    .hub-compose {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--hairline);
+      display: grid;
+      gap: 8px;
+    }
+    .hub-compose .field label { font-size: 11px; font-weight: 700; color: var(--ink-soft); }
+    .hub-compose input[type="text"],
+    .hub-compose input[type="date"],
+    .hub-compose input[type="month"],
+    .hub-compose textarea {
+      width: 100%;
+      border: 1px solid var(--ink);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--canvas);
+      box-sizing: border-box;
+    }
+    .hub-compose textarea { min-height: 88px; resize: vertical; }
+    .hub-compose-status { font-size: 11px; color: var(--body); }
+
+    /* —— 知识中枢 —— */
+    .hub-page { display: grid; gap: 12px; }
+    .hub-hero {
+      background: var(--warning-pale);
+      color: var(--ink);
+      padding: 20px 22px;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--hairline);
+    }
+    .hub-hero h2 {
+      margin: 0 0 8px;
+      font-family: Manrope, system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink-deep);
+    }
+    .hub-hero p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--body); max-width: 52em; }
+    .hub-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .hub-nav a {
+      font-size: 12px; font-weight: 600; text-decoration: none;
+      padding: 8px 14px;
+      border: 1px solid var(--ink);
+      background: var(--canvas);
+      color: var(--ink);
+      border-radius: var(--radius-xl);
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .hub-nav a:nth-child(1) { background: var(--primary-pale); }
+    .hub-nav a:nth-child(2) { background: var(--warning-pale); border-color: var(--warning-deep); }
+    .hub-nav a:nth-child(3) { background: var(--accent-peach-pale); border-color: #d4a574; }
+    .hub-nav a:nth-child(4) { background: var(--canvas); }
+    .hub-nav a:nth-child(5) { background: var(--accent-cyan-pale); border-color: #5ab8d4; }
+    .hub-nav a:hover {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .hub-nav a:nth-child(2):hover { background: var(--warning); color: var(--warning-content); border-color: var(--warning-deep); }
+    .hub-nav a:nth-child(3):hover { background: var(--accent-peach); color: var(--ink); border-color: #d4a574; }
+    .hub-nav a:nth-child(5):hover { background: var(--accent-cyan); color: var(--ink); border-color: #5ab8d4; }
+    .hub-section { scroll-margin-top: 72px; }
+    .hub-section-head { margin-bottom: 10px; }
+    .hub-section-head h3 { margin: 0 0 4px; font-size: 15px; }
+    .hub-section-head .hint { font-size: 11px; color: var(--body); line-height: 1.5; }
+
+    .knowledge-list { display: grid; gap: 6px; max-height: 360px; overflow: auto; }
+    .knowledge-item {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+      padding: 10px 12px; border: 1px solid var(--hairline); background: var(--canvas);
+      cursor: pointer; transition: background .18s ease;
+    }
+    .knowledge-item:hover { background: var(--warning-pale); }
+    .knowledge-item-date { font-size: 10px; color: var(--mute); font-weight: 700; }
+    .knowledge-item-title { font-size: 12px; margin-top: 3px; line-height: 1.4; color: var(--ink); }
+    .knowledge-item-del {
+      border: 1px solid #e0a8a8; background: #fff5f5; color: #b33;
+      width: 28px; height: 28px; cursor: pointer; font-size: 14px;
+    }
+    .knowledge-item-del:hover { background: #ffe0e0; }
+
+    .glossary-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .glossary-search {
+      flex: 1; min-width: 140px; border: 1px solid var(--hairline); padding: 6px 10px; font-size: 12px;
+    }
+    .glossary-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+      gap: 8px; max-height: 320px; overflow: auto;
+    }
+    .term-card {
+      perspective: 900px; border: 0; background: none; padding: 0; cursor: pointer; min-height: 72px;
+    }
+    .term-card-inner {
+      position: relative; width: 100%; height: 72px;
+      transition: transform .5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d;
+    }
+    .term-card-face {
+      position: absolute; inset: 0; backface-visibility: hidden;
+      border: 1px solid var(--hairline); border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      padding: 8px; text-align: center; font-size: 11px; font-weight: 700; line-height: 1.35;
+    }
+    .term-card:nth-child(3n+1) .term-card-front { background: var(--canvas); color: var(--ink); }
+    .term-card:nth-child(3n+2) .term-card-front { background: var(--warning-pale); color: var(--ink); }
+    .term-card:nth-child(3n) .term-card-front { background: var(--accent-peach-pale); color: var(--ink); }
+    .term-card-back {
+      background: var(--ink); color: var(--primary);
+      transform: rotateY(180deg); font-size: 9px; font-weight: 500;
+    }
+    .term-card:hover .term-card-inner { transform: rotateY(14deg) scale(1.03); }
+
+    .glossary-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      animation: hubFadeIn .28s ease;
+    }
+    .glossary-modal[hidden] { display: none !important; }
+    .glossary-modal-backdrop {
+      position: absolute; inset: 0; background: rgba(15, 20, 40, .55);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .glossary-modal-stage { position: relative; z-index: 1; width: min(420px, 92vw); perspective: 1200px; }
+    .glossary-modal-card {
+      position: relative; width: 100%; min-height: 200px; transform-style: preserve-3d;
+      transition: transform .65s cubic-bezier(.4,.2,.2,1);
+    }
+    .glossary-modal-card.is-flipped { transform: rotateY(180deg); }
+    .glossary-modal-face {
+      position: absolute; inset: 0; backface-visibility: hidden;
+      border-radius: var(--radius-xl); border: 1px solid var(--ink);
+      box-shadow: 0 24px 48px rgba(14, 15, 12, .12);
+      padding: 28px 22px 22px;
+    }
+    .glossary-modal-front {
+      background: var(--canvas);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;
+    }
+    .glossary-modal-front h4 { margin: 0; font-size: 22px; color: var(--ink); text-align: center; font-family: Manrope, system-ui, sans-serif; font-weight: 800; }
+    .glossary-modal-front .tap-hint { margin-top: 12px; font-size: 11px; color: var(--mute); }
+    .glossary-modal-back {
+      background: var(--accent-peach-pale);
+      transform: rotateY(180deg);
+      min-height: 200px; max-height: 70vh; overflow: auto;
+    }
+    .glossary-modal-back .term-body { font-size: 13px; line-height: 1.65; color: var(--ink); }
+    .glossary-modal-close {
+      position: absolute; top: -12px; right: -12px; z-index: 2;
+      width: 32px; height: 32px; border-radius: var(--radius-pill); border: 2px solid var(--canvas);
+      background: var(--ink); color: var(--primary); font-size: 18px; cursor: pointer;
+    }
+    @keyframes hubFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .mood-layout {
+      display: grid; grid-template-columns: 1fr 200px; gap: 12px;
+      margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--hairline);
+      align-items: stretch;
+    }
+    @media (max-width: 720px) { .mood-layout { grid-template-columns: 1fr; } }
+    .journal-section-label {
+      font-size: 11px; font-weight: 800; color: var(--ink-deep); letter-spacing: .3px;
+      margin: 0 0 8px;
+    }
+    .journal-section-label + .journal-list { margin-top: 0; }
+    .journal-section-label.compose-label { margin-top: 14px; }
+    .mood-section-label { margin-top: 4px; margin-bottom: 10px; }
+    .mood-cal-wrap { min-width: 0; }
+    .mood-cal-panel .cal-weekdays,
+    .mood-cal-panel .cal-grid {
+      gap: 1px;
+    }
+    .mood-cal-panel .cal-weekdays {
+      border: 1px solid var(--hairline);
+      border-bottom: none;
+      background: var(--hairline);
+    }
+    .mood-cal-panel .cal-weekdays span {
+      padding: 5px 0;
+      background: var(--warning-pale);
+    }
+    .mood-cal-panel .cal-grid {
+      border: 1px solid var(--hairline);
+      background: var(--hairline);
+    }
+    .mood-cal-panel .cal-cell {
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      min-height: 52px;
+      background: var(--canvas);
+      place-content: center;
+      align-content: center;
+    }
+    .mood-cal-panel .cal-cell.empty { background: var(--canvas-soft); cursor: default; }
+    .mood-cal-panel .cal-cell .amt.mood-emoji {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 400;
+      color: inherit;
+    }
+    .mood-cal-panel .cal-cell.pending .amt.mood-emoji:empty { display: none; }
+    .mood-stats {
+      border: 1px solid var(--hairline); background: var(--accent-peach-pale); padding: 10px; font-size: 11px;
+      display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box;
+    }
+    .mood-stats h4 { margin: 0 0 8px; font-size: 12px; color: var(--ink-deep); }
+    .mood-stat-row {
+      display: flex; justify-content: space-between; padding: 4px 0;
+      border-bottom: 1px dashed var(--hairline);
+    }
+    .mood-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mood-chip {
+      border: 1px solid var(--hairline); background: var(--canvas); padding: 6px 12px;
+      font-size: 12px; cursor: pointer; border-radius: var(--radius-pill);
+    }
+    .mood-chip.active { border-color: var(--warning-deep); background: var(--warning-pale); }
+    .journal-list { display: grid; gap: 6px; max-height: 240px; overflow: auto; margin-bottom: 10px; }
+    .journal-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      border: 1px solid var(--hairline); background: var(--canvas); cursor: pointer;
+      position: relative;
+    }
+    .journal-item:hover { background: var(--accent-peach-pale); }
+    .journal-mood-btn {
+      border: 1px dashed var(--hairline); background: var(--canvas); width: 36px; height: 36px;
+      font-size: 20px; cursor: pointer; flex-shrink: 0; border-radius: 6px;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .journal-mood-btn:hover { transform: scale(1.06); border-color: var(--accent-peach); }
+    .journal-mood-hint {
+      font-size: 10px; color: var(--mute); margin-left: auto; flex-shrink: 0;
+    }
+    .journal-item-main { flex: 1; min-width: 0; }
+    .journal-mood-popover {
+      position: fixed; z-index: 900; min-width: 220px;
+      border: 1px solid var(--hairline); background: var(--canvas);
+      box-shadow: 0 12px 32px rgba(14, 15, 12, .12);
+      padding: 10px 12px; border-radius: 6px;
+    }
+    .journal-mood-popover[hidden] { display: none !important; }
+    .journal-mood-popover-title { font-size: 11px; font-weight: 700; color: var(--ink-deep); margin-bottom: 8px; }
+    .journal-mood-popover-status { font-size: 10px; color: var(--mute); margin-top: 8px; min-height: 14px; }
+    .journal-doc-mood {
+      margin-bottom: 12px; padding: 10px 12px; border: 1px dashed var(--hairline);
+      background: var(--warning-pale); border-radius: 4px;
+    }
+    .journal-doc-mood[hidden] { display: none !important; }
+    .journal-doc-mood-label { font-size: 11px; font-weight: 700; color: var(--ink-deep); margin-bottom: 6px; }
+    .journal-mood-badge { font-size: 18px; }
+    .journal-item-date { font-size: 10px; color: var(--mute); font-weight: 700; }
+    .journal-item-title { font-size: 12px; margin-top: 2px; }
+
+    .discipline-grid { display: grid; gap: 10px; }
+    .discipline-card { border: none; background: var(--canvas-soft); overflow: hidden; border-radius: var(--radius-lg); }
+    .discipline-card-head {
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .discipline-card-head.buy {
+      background: var(--warning-pale);
+      color: var(--warning-content);
+    }
+    .discipline-card-head.profit {
+      background: var(--accent-peach-pale);
+      color: #5c3010;
+    }
+    .discipline-card-head.stop {
+      background: var(--negative-pale);
+      color: var(--negative-deep);
+    }
+    .discipline-card-head.struct {
+      background: var(--accent-cyan-pale);
+      color: var(--ink-deep);
+    }
+    .discipline-card-head.default {
+      background: var(--canvas-soft);
+      color: var(--ink);
+    }
+    .discipline-card-body { padding: 10px 12px; font-size: 12px; line-height: 1.55; }
+    .discipline-card-body table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .discipline-card-body th, .discipline-card-body td { border: 1px solid var(--hairline); padding: 5px 6px; }
+    .discipline-card-body th { background: var(--canvas-soft); color: var(--ink); }
+
+    .report-page { display: none; }
+    .report-page.active { display: block; }
+    .report-layout {
+      display: grid;
+      grid-template-columns: minmax(200px, 240px) 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+    .report-sidebar .card-body {
+      max-height: calc(100vh - 180px);
+      overflow: auto;
+      padding: 8px;
+    }
+    .report-sidebar .timeline-item {
+      cursor: pointer;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: none;
+    }
+    .report-sidebar .timeline-item.active {
+      background: var(--primary-pale);
+      box-shadow: inset 0 0 0 2px var(--primary);
+    }
+    .report-welcome {
+      padding: 28px 16px;
+      text-align: center;
+      color: #4d5b8f;
+      line-height: 1.7;
+    }
+    .report-welcome strong { color: #1f2d57; }
+    @media (max-width: 900px) {
+      .report-layout { grid-template-columns: 1fr; }
+      .report-sidebar .card-body { max-height: 200px; }
+    }
+    .report-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .report-title { font-size: 17px; font-weight: 800; color: #1f2d57; }
+    .report-content {
+      border: 1px solid #ccd4ed;
+      background: #fbfcff;
+      padding: 12px;
+      min-height: 320px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    .report-content h1,
+    .report-content h2,
+    .report-content h3 {
+      margin: 10px 0 6px;
+      color: #1f2d57;
+      line-height: 1.4;
+    }
+    .report-content h1 { font-size: 18px; }
+    .report-content h2 { font-size: 16px; }
+    .report-content h3 { font-size: 14px; }
+    .report-content p { margin: 6px 0; }
+    .report-content ul,
+    .report-content ol {
+      margin: 6px 0 10px 18px;
+      padding: 0;
+    }
+    .report-content li { margin: 4px 0; }
+    .report-content code {
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      background: #edf1ff;
+      padding: 1px 4px;
+      border: 1px solid #d2daf3;
+    }
+    .report-content strong { color: #16244d; }
+    .report-content a {
+      color: var(--chrome-indigo);
+      text-decoration: underline;
+    }
+    .report-content hr {
+      border: 0;
+      border-top: 1px solid #ccd4ed;
+      margin: 12px 0;
+    }
+    .report-content blockquote {
+      margin: 8px 0;
+      padding: 10px 14px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-md);
+      background: var(--canvas-soft);
+      color: var(--body);
+    }
+    .report-content blockquote p { margin: 4px 0; }
+    .report-content pre {
+      margin: 8px 0;
+      padding: 10px 12px;
+      background: #edf1ff;
+      border: 1px solid #d2daf3;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .report-content pre code {
+      background: none;
+      border: 0;
+      padding: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .report-content table.md-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px;
+      font-size: 12px;
+    }
+    .report-content table.md-table th,
+    .report-content table.md-table td {
+      border: 1px solid #ccd4ed;
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+    .report-content table.md-table th {
+      background: #e8edfb;
+      color: #1f2d57;
+      font-weight: 700;
+    }
+    .report-content table.md-table tr:nth-child(even) td {
+      background: #f7f9ff;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .control-stack { display: grid; gap: 8px; }
+    .field { display: grid; gap: 4px; }
+    .field label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .field input[type="text"],
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--ink);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--canvas);
+    }
+    .field textarea { min-height: 90px; resize: vertical; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn {
+      background: var(--primary);
+      color: var(--on-primary);
+      border: 1px solid var(--ink);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-xl);
+      transition: background .15s ease;
+    }
+    .btn:hover { background: var(--primary-active); }
+    .btn.secondary {
+      background: var(--canvas-soft);
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .btn.secondary:hover { background: var(--primary-pale); }
+    .btn.ghost {
+      background: var(--canvas);
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .btn.ghost:hover { background: var(--canvas-soft); }
+    .muted { font-size: 12px; color: var(--mute); }
+    .trend-table {
+      margin-top: 8px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+    }
+    .trend-table th, .trend-table td {
+      border-bottom: 1px solid var(--hairline);
+      padding: 5px 6px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .trend-table th {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: .4px;
+    }
+    .status {
+      font-size: 11px;
+      background: #f7f8fd;
+      border: 1px solid #d7def3;
+      padding: 8px;
+      white-space: pre-wrap;
+    }
+
+    .trend-chart-wrap { position: relative; }
+    canvas { width: 100%; height: 210px; background: #fbfcff; border: 1px solid #d3daf1; }
+    .profit-calendar-wrap { display: grid; gap: 10px; }
+    .cal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--ink-deep);
+      font-weight: 700;
+    }
+    .cal-nav { display: flex; align-items: center; gap: 6px; }
+    .cal-nav button {
+      border: 1px solid var(--ink);
+      background: var(--canvas);
+      color: var(--ink);
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      border-radius: var(--radius-pill);
+    }
+    .cal-mode { font-size: 10px; color: var(--mute); font-weight: 700; }
+    .cal-weekdays, .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+    }
+    .cal-weekdays span {
+      text-align: center;
+      font-size: 10px;
+      color: #53608c;
+      font-weight: 700;
+      padding: 2px 0;
+    }
+    .cal-cell {
+      min-height: 58px;
+      border: 1px solid #e2e7f6;
+      background: #fbfcff;
+      padding: 4px 3px;
+      text-align: center;
+      cursor: pointer;
+      display: grid;
+      align-content: start;
+      gap: 2px;
+      font: inherit;
+    }
+    button.cal-cell { appearance: none; color: inherit; }
+    button.cal-cell:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+    .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; }
+    .cal-cell .day { font-size: 11px; color: var(--body); font-weight: 700; }
+    .cal-cell .amt { font-size: 10px; font-weight: 700; line-height: 1.2; word-break: break-all; }
+    .cal-cell.pending .amt { color: var(--mute); font-weight: 500; }
+    .cal-cell.today:not(.selected) { box-shadow: inset 0 0 0 2px var(--primary-neutral); }
+    .cal-cell.gain { background: var(--negative-pale); }
+    .cal-cell.loss { background: var(--positive-pale); }
+    .cal-cell.selected {
+      border-color: var(--ink);
+      box-shadow: inset 0 0 0 2px var(--primary);
+    }
+    .cal-cell.pending.selected { background: var(--primary-pale); }
+    .cal-cell.gain.selected { background: var(--negative-pale); }
+    .cal-cell.loss.selected { background: var(--positive-pale); }
+    .cal-cell.selected .day { color: var(--ink-deep); font-weight: 800; }
+    .cal-cell.gain.selected .amt.profit-up { color: var(--negative); }
+    .cal-cell.loss.selected .amt.profit-down { color: var(--positive-deep); }
+    .cal-cell.weekend {
+      background: var(--canvas-soft);
+      border-color: var(--hairline);
+    }
+    .cal-cell.weekend .amt { color: var(--mute); font-weight: 500; }
+    .cal-cell.weekend.selected { background: var(--canvas-soft); }
+    .cal-cell.weekend.selected .day { color: var(--ink); }
+    .cal-summary {
+      border: 1px solid #d3daf1;
+      background: #f8faff;
+      padding: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .cal-summary .title { font-weight: 800; color: #1f2d57; margin-bottom: 4px; }
+
+    .card-header-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .profit-view-tabs { display: flex; gap: 4px; flex-shrink: 0; }
+    .profit-view-tab {
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      color: var(--body);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: var(--radius-pill);
+    }
+    .profit-view-tab.active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .profit-view-pane { display: grid; gap: 10px; }
+    .profit-view-pane[hidden] { display: none !important; }
+    .profit-curve-wrap {
+      position: relative;
+      background: var(--platinum);
+      border: 1px solid #d3daf1;
+      padding: 6px 4px 4px;
+      min-height: 210px;
+    }
+    .profit-curve-wrap svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 200px;
+    }
+    .profit-curve-empty {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      text-align: center;
+      padding: 16px;
+      background: #f8faff;
+      border: 1px dashed #c5cee8;
+    }
+    .curve-tooltip {
+      position: absolute;
+      min-width: 132px;
+      pointer-events: none;
+      background: rgba(33, 36, 46, 0.95);
+      color: #fff;
+      border: 1px solid #6f7db2;
+      padding: 6px 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      z-index: 5;
+      display: none;
+      box-shadow: 0 6px 14px rgba(15, 18, 32, 0.25);
+    }
+    .curve-axis-label { font-size: 9px; fill: #53608c; font-weight: 700; }
+    .curve-axis-title { font-size: 8px; fill: #6b7699; font-weight: 700; }
+    .curve-axis-label-x { font-size: 7px; fill: #53608c; font-weight: 600; }
+    .curve-axis-label-weekend { font-size: 7px; fill: #a8b0c8; font-weight: 600; }
+    .curve-x-tick { stroke: #d8dff0; stroke-width: 1; }
+    .curve-grid-line { stroke: #e2e7f6; stroke-width: 1; }
+    .curve-zero-line { stroke: #9caad4; stroke-width: 1; stroke-dasharray: 4 3; }
+    .curve-line-up { stroke: #c3252f; stroke-width: 2; fill: none; }
+    .curve-line-down { stroke: #0a9a57; stroke-width: 2; fill: none; }
+    .curve-area-up { fill: rgba(195, 37, 47, 0.12); }
+    .curve-area-down { fill: rgba(10, 154, 87, 0.12); }
+    .curve-dot-up { fill: #c3252f; }
+    .curve-dot-down { fill: #0a9a57; }
+    .curve-hit { fill: transparent; cursor: crosshair; }
+    .card-header-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .profit-view-tabs { display: flex; gap: 6px; }
+    .profit-view-tab {
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      line-height: 1.2;
+      border-radius: var(--radius-pill);
+    }
+    .profit-view-tab.active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .profit-view-panel.hidden { display: none; }
+    .profit-curve-wrap {
+      position: relative;
+      background: var(--platinum);
+      border: 1px solid #d3daf1;
+      min-height: 220px;
+    }
+    .profit-curve-svg {
+      width: 100%;
+      height: 220px;
+      display: block;
+      background: #fbfcff;
+    }
+    .curve-empty {
+      padding: 36px 12px;
+      text-align: center;
+      font-size: 12px;
+      color: #53608c;
+      background: #fbfcff;
+    }
+    .curve-hit { cursor: crosshair; }
+    .curve-tooltip {
+      position: absolute;
+      min-width: 132px;
+      pointer-events: none;
+      background: rgba(33, 36, 46, 0.95);
+      color: #fff;
+      border: 1px solid #6f7db2;
+      padding: 6px 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      z-index: 5;
+      display: none;
+      box-shadow: 0 6px 14px rgba(15, 18, 32, 0.25);
+    }
+    .trend-tooltip {
+      position: absolute;
+      min-width: 146px;
+      pointer-events: none;
+      background: rgba(33, 36, 46, 0.95);
+      color: #fff;
+      border: 1px solid #6f7db2;
+      padding: 6px 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      z-index: 5;
+      display: none;
+      box-shadow: 0 6px 14px rgba(15, 18, 32, 0.25);
+    }
+
+    @media (max-width: 980px) {
+      .grid, .control-row { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Wise theme — 统一扫尾 */
+    #hub-knowledge .card-header { background: var(--primary-pale); }
+    #hub-research .card-header { background: var(--warning-pale); }
+    #hub-glossary .card-header { background: var(--accent-peach-pale); }
+    #hub-journal .card-header { background: var(--accent-cyan-pale); }
+    #hub-discipline .card-header { background: var(--canvas-soft); }
+    .timeline-item,
+    .knowledge-item,
+    .journal-item,
+    .action-item,
+    .todo-row,
+    .brief-item {
+      border-color: var(--hairline);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+    }
+    .timeline-item:hover { background: var(--warning-pale); }
+    .knowledge-item:hover { background: var(--warning-pale); }
+    .journal-item:hover { background: var(--accent-peach-pale); }
+    .brief-item:hover { background: var(--accent-cyan-pale); }
+    .journal-section-label { color: var(--ink-deep); font-family: Manrope, system-ui, sans-serif; }
+    .mood-stats { border: none; background: var(--accent-peach-pale); border-radius: var(--radius-lg); }
+    .mood-stats h4 { color: var(--ink-deep); font-family: Manrope, system-ui, sans-serif; }
+    .status { background: var(--canvas-soft); border: 1px solid var(--hairline); border-radius: var(--radius-md); }
+    .report-content,
+    .detail,
+    .timeline { border-color: var(--hairline); border-radius: var(--radius-md); }
+    .glossary-search { border: 1px solid var(--ink); border-radius: var(--radius-md); }
+    .report-title,
+    .report-welcome strong,
+    .cal-summary .title,
+    .knowledge-item-title { color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
+    .cal-toolbar { color: var(--ink-deep); }
+    .trend-table th { background: var(--canvas-soft); color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">Fund-Lab 看板</div>
+      <div class="meta" id="lastRefreshLabel">未刷新</div>
+    </header>
+
+    <nav class="subbar">
+      <button class="tab-btn active" data-tab="home">首页看板</button>
+      <button class="tab-btn" data-tab="hub">知识中枢</button>
+      <button class="tab-btn" data-tab="report" id="reportTabBtn">基金市场周报</button>
+      <button class="tab-btn" data-tab="settings">数据与自动化设置</button>
+    </nav>
+
+    <main class="content">
+      <section class="panel active" id="panel-home">
+        <div class="grid">
+          <div class="stack">
+            <article class="card">
+              <h3 class="card-header">持仓总览</h3>
+              <div class="card-body">
+                <div class="hero">
+                  <div class="hero-title">止血优先，结构先行</div>
+                  <div class="hero-sub" id="midnightTip">每日 00:00 自动刷新昨日收益</div>
+                </div>
+                <div class="muted" id="kpiSourceNote" style="margin-bottom:8px;">数据口径：读取 portfolio-template.md + daily-snapshots.md</div>
+                <div class="kpi-grid">
+                  <div class="kpi">
+                    <div class="label">总资产（估算）</div>
+                    <div class="value" id="kpiTotal">--</div>
+                    <div class="sub">支付宝 + 南方基金</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="label">当日收益</div>
+                    <div class="value" id="kpiDaily">--</div>
+                    <div class="sub" id="kpiDailySub">养基宝口径</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="label">昨日收益</div>
+                    <div class="value" id="kpiYesterday">--</div>
+                    <div class="sub" id="kpiYesterdaySub">养基宝口径（前一日）</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="label">持有收益</div>
+                    <div class="value" id="kpiHolding">--</div>
+                    <div class="sub">当前持仓浮动</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="label">累计收益</div>
+                    <div class="value" id="kpiAccum">--</div>
+                    <div class="sub">含历史已赎回</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="label">防守占比</div>
+                    <div class="value" id="kpiDefense">--</div>
+                    <div class="sub">目标 ≥ 15%</div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-header card-header-tabs">
+                <span>收益视图</span>
+                <div class="profit-view-tabs" role="tablist" aria-label="收益视图切换">
+                  <button type="button" class="profit-view-tab active" data-profit-view="calendar" role="tab" aria-selected="true">收益日历</button>
+                  <button type="button" class="profit-view-tab" data-profit-view="curve" role="tab" aria-selected="false">收益曲线</button>
+                </div>
+              </h3>
+              <div class="card-body profit-calendar-wrap">
+                <div class="cal-toolbar">
+                  <div class="cal-nav">
+                    <button type="button" id="calPrev" aria-label="上个月">‹</button>
+                    <span id="calMonthLabel">—</span>
+                    <button type="button" id="calNext" aria-label="下个月">›</button>
+                  </div>
+                  <span class="cal-mode" id="calModeLabel">日 · ¥ · 涨红跌绿</span>
+                </div>
+                <div id="profitCalendarView" class="profit-view-pane">
+                  <div class="cal-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                  </div>
+                  <div id="profitCalendar" class="cal-grid"></div>
+                  <div id="calDayDetail" class="cal-summary">
+                    <div class="title">当日收益明细</div>
+                    <div class="muted">点击日历中的日期查看详情</div>
+                  </div>
+                </div>
+                <div id="profitCurveView" class="profit-view-pane" hidden>
+                  <div id="profitCurveChart" class="profit-curve-wrap">
+                    <div class="profit-curve-empty muted">加载中…</div>
+                  </div>
+                  <div id="profitCurveDetail" class="cal-summary">
+                    <div class="title">当月收益概览</div>
+                    <div class="muted">悬停曲线上的点查看每日收益</div>
+                  </div>
+                </div>
+                <div class="muted">数据来自 daily-snapshots.md；今日收益优先养基宝，历史日优先双平台/支付宝日历。</div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-header">基金市场周报</h3>
+              <div class="card-body">
+                <div class="muted" style="margin-bottom:8px;">点击任一条目直达该周完整周报</div>
+                <div id="weeklyBriefList" class="brief-list"></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="stack">
+            <article class="card">
+              <h3 class="card-header">待办提醒</h3>
+              <div class="card-body">
+                <div id="todoList" class="todo-wrap"></div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-header">结构风险与阈值</h3>
+              <div class="card-body">
+                <table class="mini-table">
+                  <thead><tr><th>指标</th><th>当前</th><th>目标</th><th>状态</th></tr></thead>
+                  <tbody id="riskRows"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-header">候选池 + 准入规则</h3>
+              <div class="card-body">
+                <div class="actions-list compact" id="candidateList"></div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-header">建议中心（执行 / 观察 / 学习）</h3>
+              <div class="card-body">
+                <div class="actions-list compact" id="actionList"></div>
+              </div>
+            </article>
+
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-hub">
+        <div class="hub-page">
+          <div class="hub-hero">
+            <h2>知识中枢</h2>
+            <p>你的私人投资学习档案：问答沉淀、术语词典、复盘心情、纪律守则与穿透研究，一页集中管理。</p>
+            <nav class="hub-nav" aria-label="知识中枢分区">
+              <a href="#hub-knowledge">个人基金知识库</a>
+              <a href="#hub-research">穿透研究</a>
+              <a href="#hub-glossary">基金小白术语词典</a>
+              <a href="#hub-journal">我的基金复盘日记</a>
+              <a href="#hub-discipline">投资纪律守则</a>
+            </nav>
+          </div>
+
+          <article class="card hub-section" id="hub-knowledge">
+            <h3 class="card-header">个人基金知识库</h3>
+            <div class="card-body">
+              <div class="hub-section-head">
+                <p class="hint">你和 AI 对话里学到的东西，会自动沉淀在这里。不需要的可以点右侧删除（仅从看板隐藏，不删文件）。</p>
+              </div>
+              <div id="qaTimeline" class="knowledge-list"></div>
+            </div>
+          </article>
+
+          <article class="card hub-section" id="hub-research">
+            <h3 class="card-header">基金穿透研究报告</h3>
+            <div class="card-body">
+              <div class="hub-section-head">
+                <p class="hint">你的研究在 <code>assets/fund-research/</code>；写法范例见 <code>references/examples/</code></p>
+              </div>
+              <div id="researchTimeline" class="timeline"></div>
+            </div>
+          </article>
+
+          <article class="card hub-section" id="hub-glossary">
+            <h3 class="card-header">基金小白术语词典</h3>
+            <div class="card-body">
+              <div class="hub-section-head">
+                <p class="hint">基础词典 + 我的个性化词典（<code>assets/personal-glossary.md</code>）。点击卡片翻转查看解释。</p>
+              </div>
+              <div class="glossary-toolbar">
+                <input type="search" class="glossary-search" id="glossarySearch" placeholder="搜索术语…" />
+              </div>
+              <div id="glossaryGrid" class="glossary-grid"></div>
+            </div>
+          </article>
+
+          <article class="card hub-section" id="hub-journal">
+            <h3 class="card-header">我的基金复盘日记</h3>
+            <div class="card-body">
+              <div class="hub-section-head">
+                <p class="hint">先看自己写过的复盘，想记今天的心情和感受？在下方手写保存，月底可对照心情日历回顾。</p>
+              </div>
+
+              <div class="journal-section-label">我写过的</div>
+              <div id="reviewJournalTimeline" class="journal-list"></div>
+              <div class="journal-mood-popover" id="journalMoodPopover" hidden>
+                <div class="journal-mood-popover-title" id="journalMoodPopoverTitle">给这篇日记选心情</div>
+                <div class="mood-picker" id="journalMoodPopoverPicker"></div>
+                <div class="journal-mood-popover-status" id="journalMoodPopoverStatus"></div>
+              </div>
+
+              <div class="journal-section-label compose-label">今天想写什么？</div>
+              <div class="hub-compose" id="reviewJournalCompose">
+                <div class="field">
+                  <label for="reviewDate">日期</label>
+                  <input type="date" id="reviewDate" />
+                </div>
+                <div class="field">
+                  <label>今天的心情</label>
+                  <div class="mood-picker" id="reviewMoodPicker"></div>
+                </div>
+                <div class="field">
+                  <label for="reviewTitle">标题（可选）</label>
+                  <input type="text" id="reviewTitle" placeholder="例：七月复盘 / 转换后小结" />
+                </div>
+                <div class="field">
+                  <label for="reviewBody">内容（支持 Markdown）</label>
+                  <textarea id="reviewBody" placeholder="本期操作、纪律对照、学到的一条…"></textarea>
+                </div>
+                <div class="btn-row">
+                  <button type="button" class="btn secondary" id="btnSaveReview">保存到本地复盘日记</button>
+                </div>
+                <div class="hub-compose-status" id="reviewSaveStatus">需先授权项目目录（可写入）。</div>
+              </div>
+
+              <div class="mood-layout">
+                <div class="mood-cal-wrap mood-cal-panel">
+                  <div class="journal-section-label mood-section-label">心情日历</div>
+                  <div class="cal-toolbar" style="margin-bottom:6px;">
+                    <div class="cal-nav">
+                      <button type="button" id="moodCalPrev" aria-label="上个月">‹</button>
+                      <span id="moodCalMonthLabel">—</span>
+                      <button type="button" id="moodCalNext" aria-label="下个月">›</button>
+                    </div>
+                    <span class="cal-mode">心情</span>
+                  </div>
+                  <div class="cal-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                  </div>
+                  <div id="moodCalendar" class="cal-grid"></div>
+                </div>
+                <div class="mood-stats" id="moodStats">
+                  <h4>本月心情</h4>
+                  <div class="muted">暂无数据</div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card hub-section" id="hub-discipline">
+            <h3 class="card-header">投资纪律守则</h3>
+            <div class="card-body">
+              <div class="hub-section-head">
+                <p class="hint">你的个人规则卡，按类别拆开展示。完整原文仍可点击查看。</p>
+              </div>
+              <div id="disciplineGrid" class="discipline-grid"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="glossary-modal" id="glossaryModal" hidden>
+        <div class="glossary-modal-backdrop" id="glossaryModalBackdrop"></div>
+        <div class="glossary-modal-stage">
+          <button type="button" class="glossary-modal-close" id="glossaryModalClose" aria-label="关闭">×</button>
+          <div class="glossary-modal-card" id="glossaryModalCard">
+            <div class="glossary-modal-face glossary-modal-front">
+              <h4 id="glossaryModalTerm">—</h4>
+              <span class="tap-hint">点击翻转查看解释</span>
+            </div>
+            <div class="glossary-modal-face glossary-modal-back">
+              <div class="term-body" id="glossaryModalBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel report-page" id="panel-hubdoc">
+        <article class="card">
+          <h3 class="card-header">知识中枢 · 详情</h3>
+          <div class="card-body">
+            <div class="report-head">
+              <div class="report-title" id="hubDocTitle">未选择条目</div>
+              <button class="btn ghost" id="btnBackHub">返回知识中枢</button>
+            </div>
+            <div class="journal-doc-mood" id="journalDocMood" hidden>
+              <div class="journal-doc-mood-label" id="journalDocMoodLabel">这篇日记的心情</div>
+              <div class="mood-picker" id="journalDocMoodPicker"></div>
+              <div class="journal-mood-popover-status" id="journalDocMoodStatus"></div>
+            </div>
+            <div class="report-content" id="hubDocContent">请在知识中枢点击任一条目进入详情页。</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel report-page" id="panel-report">
+        <div class="report-layout">
+          <aside class="card report-sidebar">
+            <h3 class="card-header">历史存档</h3>
+            <div class="card-body">
+              <div id="reportArchiveList" class="timeline"></div>
+            </div>
+          </aside>
+          <article class="card report-main">
+            <div class="card-body">
+              <div class="report-head">
+                <div class="report-title" id="reportTitle">基金市场周报</div>
+                <button class="btn ghost" id="btnBackHome">返回首页</button>
+              </div>
+              <div class="report-content" id="reportContent">
+                <div class="report-welcome">
+                  <p><strong>周报存档</strong></p>
+                  <p class="muted">← 从左侧选择日期阅读完整周报</p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-settings">
+        <div class="control-row">
+          <article class="card">
+            <h3 class="card-header">自动读取（主路径）</h3>
+            <div class="card-body control-stack">
+              <div class="muted">优先使用目录授权（读写本地 md）。不支持时可用手动文件导入。</div>
+              <div class="btn-row">
+                <button class="btn" id="btnPickDir">授权项目目录</button>
+                <button class="btn ghost" id="btnRefresh">立即刷新</button>
+              </div>
+              <div class="field">
+                <label>自动轮询间隔</label>
+                <select id="pollInterval">
+                  <option value="0">关闭自动刷新</option>
+                  <option value="300000">5分钟</option>
+                  <option value="900000">15分钟</option>
+                  <option value="3600000">60分钟</option>
+                </select>
+              </div>
+              <div class="status" id="autoStatus">尚未授权目录。</div>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3 class="card-header">手动导入覆盖（兜底）</h3>
+            <div class="card-body control-stack">
+              <div class="field">
+                <label>导入核心文件（可多选）</label>
+                <input id="manualFiles" type="file" multiple accept=".md,.txt,.json" />
+              </div>
+              <div class="field">
+                <label>临时覆盖 JSON（例如修正金额）</label>
+                <textarea id="overrideJson" placeholder='{"kpi":{"total":"41371"}}'></textarea>
+              </div>
+              <div class="btn-row">
+                <button class="btn secondary" id="btnApplyOverride">应用覆盖</button>
+                <button class="btn ghost" id="btnClearOverride">清除覆盖</button>
+              </div>
+              <div class="status" id="syncStatus">未导入文件。支持 localStorage 持久化。</div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STATE_KEY = "fundlab_dashboard_state_v1";
+    const SNAPSHOT_KEY = "fundlab_dashboard_snapshots_v2";
+    const TODO_STATE_KEY = "fundlab_dashboard_todo_state_v1";
+    const DIR_HANDLE_DB = "fundlab_dashboard_db_v1";
+    const DIR_HANDLE_STORE = "handles";
+    const DIR_HANDLE_KEY = "projectDir";
+    const POLL_INTERVAL_KEY = "fundlab_poll_interval_v1";
+    const HIDDEN_QA_KEY = "fundlab_hidden_qa_v1";
+    const MOOD_OPTIONS = [
+      { id: "calm", label: "平静", emoji: "😌" },
+      { id: "happy", label: "开心", emoji: "😊" },
+      { id: "confident", label: "有信心", emoji: "💪" },
+      { id: "hesitant", label: "犹豫", emoji: "🤔" },
+      { id: "anxious", label: "焦虑", emoji: "😰" },
+      { id: "panic", label: "恐慌", emoji: "😱" },
+      { id: "greedy", label: "贪婪", emoji: "🤑" },
+      { id: "regret", label: "后悔", emoji: "😔" }
+    ];
+    const REVIEW_JOURNAL_DIR = "assets/review-journal";
+    const FUND_RESEARCH_DIR = "assets/fund-research";
+    const DEFAULT_PATHS = {
+      portfolio: "assets/portfolio-template.md",
+      qa: "QA_Log.md",
+      discipline: "assets/discipline-rules.md",
+      glossary: "references/fund-glossary.md",
+      personalGlossary: "assets/personal-glossary.md",
+      dailySnapshots: "assets/daily-snapshots.md"
+    };
+    const WEEKLY_BRIEFS_DIR = "assets/weekly-briefs";
+
+    const EMBEDDED_BOOTSTRAP = {
+      files: {
+        portfolio: `# 内置快照
+更新时间: 2026-07-07
+总资产: 41371
+权益: 40676.63
+现金: 693.93
+科技链占比: 44%
+防守占比: 9%
+东吴计划: 7/8 转 641.48 份; 7/10 转 479.00 份`,
+        qa: `2026-07-07
+已安装 fund-lab。
+已完成持仓份额更新与转换计划。`,
+        weeklyBriefs: `# 每周基金市场简报归档
+
+## 环境简报 · 2026-07-07
+
+### 大环境（一句话）
+美股科技偏强反弹、A股半导体阶段回调、红利低波偏弱、黄金止跌反弹、国内长债利率小幅上行后回落。整体是「风格轮动 + 波动加大」。
+
+### 和你持仓最相关的 5 条
+1. **纳指本周偏强**
+   - 7/6 纳指单日约 +1.1%，上周（节假日短周）纳指约 +2.1%。
+   - 你纳指三只合计仓位约 34%，这部分对组合有明显正贡献。
+   - 来源：AP、CNBC（2026-07-06）
+
+2. **美联储 7 月会议预期偏“按兵不动”**
+   - 就业数据走软后，市场对近期进一步加息预期下降。
+   - 这通常对成长股估值（纳指）相对友好，但后续仍看通胀数据。
+   - 来源：CNBC、Reuters转述类报道（2026-07-03~07-06）
+
+3. **A股半导体/科技链上周有回调**
+   - 多份行业周报口径显示半导体板块周内回撤（约 -3%~-4%量级），内部继续分化。
+   - 你科技链（芯片/材料/通信/互联网）仍有较高暴露，短期波动压力还在。
+   - 来源：开源证券周报转载、证券之星/新浪行业周评（2026-07-05）
+
+4. **红利低波近期偏弱**
+   - 你红利低波三只合计约 25%，近期表现并不“绝对防跌”，存在同向回撤。
+   - 来源：相关ETF行情页面（2026-07 上旬，口径不一，仅作趋势参考）
+
+5. **黄金出现技术性反弹，债券利率上周先上后下**
+   - 黄金周内大致 +1%~+2%区间反弹；国内10Y国债收益率周内小幅上行后回落至约1.73%附近。
+   - 你黄金+中短债+现金是防守底盘，但占比仍偏低。
+   - 来源：World Gold Council/Reuters转述、新华财经/新浪债市周报（2026-07-06）
+
+### 板块快照（按你组合）
+| 板块 | 近一周环境 | 你当前暴露 |
+|---|---|---|
+| 纳指/美股科技 | 偏强反弹 | 高（约34%） |
+| A股半导体/科技链 | 回调+分化 | 中高 |
+| 红利低波 | 偏弱震荡 | 高（约25%，且重复） |
+| 债/黄金/现金 | 防守修复但不强 | 低（约9%） |
+
+### 对你的组合意味着什么（重点）
+- 波动来源仍是“高集中”：你主要波动仍由「纳指+科技链+红利重复」驱动，不是单只基金问题。
+- 这周“别的板块涨”不等于该追：如果是科技子赛道上涨，对你不是对冲，是加重相关性。
+- 你真正缺的是低相关缓冲：防守仓位偏低（你目标是往 15% 靠），这比追热点更关键。
+- 当前优先级不变：先执行既定东吴分批转换计划，完成结构修复，再谈新增方向。
+
+### 本周建议（非买卖指令）
+- 继续按你已定计划执行：
+  - 7/8：东吴转 641.48 份
+  - 7/10：东吴转 479.00 份
+- 本周不新增任何科技子赛道基金。
+- 周末可做一次 /透视，看转换后科技链占比和防守占比是否朝目标移动。
+
+> 以上为学习研究框架，不构成投资建议，最终决策权在你自己。
+`,
+        discipline: `板块上限 30%；防守目标 15%；纳指3只、红利3只需关注重复。`,
+        review: `2026-07 基线：科技链44%，防守9%，执行东吴转换修结构。`,
+        example: `东吴多策略穿透：重仓存储芯片+锂电，和已有科技链重叠。`
+      },
+      parsed: {
+        portfolio: {
+          totals: { equity: 40676.63, cash: 693.93, total: 41371, shortNeed: "<10%" },
+          candidatePool: [
+            { direction: "宽基", gapFill: true, discipline: true, feeLiquidity: true, cashConflict: true, note: "用于降低行业集中度" },
+            { direction: "防守（中短债）", gapFill: true, discipline: true, feeLiquidity: true, cashConflict: true, note: "补防守缓冲" },
+            { direction: "防守（黄金）", gapFill: true, discipline: true, feeLiquidity: true, cashConflict: true, note: "增强低相关资产" },
+            { direction: "科技子赛道新增", gapFill: false, discipline: false, feeLiquidity: true, cashConflict: true, note: "与现有科技链高重叠，暂不准入" }
+          ],
+          todo: [
+            {
+              batch: "任务1",
+              date: "7/8（周三）15:00前",
+              amount: "641.48份",
+              reason: "较早买入份额费率更优，先降东吴重叠暴露并提升防守仓位",
+              split: "宽基256.59份 / 中短债192.44份 / 黄金96.22份 / 现金96.23份"
+            },
+            {
+              batch: "任务2",
+              date: "7/10（周五）15:00前",
+              amount: "479.00份",
+              reason: "避开<7天高费率区间，完成东吴清仓与结构修复闭环",
+              split: "宽基191.60份 / 中短债143.70份 / 黄金71.85份 / 现金71.85份"
+            }
+          ],
+          groups: [
+            { name: "🔴 纳指100×3", funds: "天弘/南方/摩根", value: "~14,202", ratio: "34.2%", note: "高重复" },
+            { name: "🟢 红利低波×3", funds: "南方/博时/天弘", value: "~10,511", ratio: "25.4%", note: "高重复" },
+            { name: "🔴 科技链", funds: "半导体/通信/成长", value: "~6,629", ratio: "16.0%", note: "与东吴重叠" },
+            { name: "🟢 防守", funds: "债+黄金+现金", value: "~3,678", ratio: "8.9%", note: "低于15%目标" }
+          ]
+        },
+        qa: {
+          sections: [
+            { date: "2026-07-07", title: "Fund-Lab 技能搭建完成", body: "完成 SKILL、纪律、复盘、压力测试、模拟模块。" },
+            { date: "2026-07-07", title: "持仓份额快照已更新", body: "已记录全部基金份额、定投状态和东吴转换计划。" },
+            { date: "2026-07-07", title: "环境与缺口分析框架上线", body: "新增 /环境 和 透视缺口分析，避免追高陷阱。" }
+          ],
+          latestEnv: "最近环境：纳指偏强反弹，A股科技回调分化，黄金止跌，债券利率小幅波动。对你组合意味着先执行东吴分批转换，不追新热点。"
+        },
+        discipline: { hasTechLimitWarn: true, hasDefenseWarn: true, summary: "科技链超限，防守偏低；优先再平衡而非追高。" },
+        filesMeta: {
+          portfolio: { updated: "2026/7/7", summary: "持仓份额、定投与转换计划已更新" },
+          qa: { updated: "2026/7/7", summary: "关键决策与学习日志" },
+          discipline: { updated: "2026/7/7", summary: "纪律卡初版与阈值规则" },
+          reviewJournalDir: { updated: "2026/7/7", summary: "复盘目录 1 篇" },
+          example: { updated: "2026/7/7", summary: "东吴多策略穿透研究" }
+        }
+      }
+    };
+
+    const appState = {
+      files: {},
+      parsed: {},
+      manualOverride: {},
+      reportSelected: null,
+      dirHandle: null,
+      timer: null,
+      calView: { year: null, month: null, selectedDate: null, mode: "calendar" }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+
+    /** 本地日历日期 YYYY-MM-DD（不用 UTC，避免北京时间凌晨仍显示昨天） */
+    function localDateStr(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    const cleanMd = (s) => String(s ?? "")
+      .replace(/\*\*/g, "")
+      .replace(/__(.*?)__/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .trim();
+
+    function initTabs() {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.tab;
+          switchTab(key);
+          if (key === "report" && appState.parsed?.qa) {
+            renderReportPanel(appState.parsed.qa, { fromNav: true });
+          }
+        });
+      });
+    }
+
+    function parseNumber(raw) {
+      if (!raw) return null;
+      const text = String(raw).replace(/[,，\s]/g, "").match(/-?\d+(\.\d+)?/);
+      return text ? Number(text[0]) : null;
+    }
+
+    function parsePercent(raw) {
+      if (!raw) return null;
+      const m = String(raw).match(/-?\d+(\.\d+)?\s*%/);
+      return m ? Number(m[0].replace("%", "")) : null;
+    }
+
+    function parsePortfolio(md) {
+      const result = {
+        totals: {},
+        plans: [],
+        holdings: [],
+        groups: [],
+        todo: [],
+        updateDate: null
+      };
+      const lines = md.split(/\r?\n/);
+
+      // Basic info table
+      const basicStart = lines.findIndex(l => l.includes("## 基本情况"));
+      if (basicStart >= 0) {
+        for (let i = basicStart; i < Math.min(lines.length, basicStart + 30); i++) {
+          const line = lines[i];
+          if (/^\|\s*更新日期/.test(line)) result.updateDate = line.split("|")[2]?.trim();
+          if (/权益类总市值/.test(line)) {
+            result.totals.equity = parseNumber(line);
+            const dailyMatch = line.match(/当日\s*([+-]?\d+(\.\d+)?)/);
+            if (dailyMatch) result.totals.daily = Number(dailyMatch[1]);
+          }
+          if (/支付宝平台总资产|支付宝.*总资产/.test(line)) result.totals.alipayTotal = parseNumber(line);
+          if (/南方基金平台总资产|南方基金.*总资产/.test(line)) result.totals.nanfangTotal = parseNumber(line);
+          if (/投资组合合计|总资产合计/.test(line)) result.totals.total = parseNumber(line);
+          if (/余额宝（不在养基宝）/.test(line)) result.totals.cash = parseNumber(line);
+          if (/合计约/.test(line) && result.totals.total == null) result.totals.total = parseNumber(line);
+          if (/当日收益/.test(line) && !/累计/.test(line)) {
+            const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
+            if (m) result.totals.daily = Number(m[1].replace(/,/g, ""));
+          }
+          if (/昨日收益/.test(line) && !/累计/.test(line)) {
+            const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
+            if (m) result.totals.yesterdayProfit = Number(m[1].replace(/,/g, ""));
+          }
+          if (/持有收益/.test(line) && !/累计/.test(line)) {
+            const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
+            if (m) result.totals.holdingProfit = Number(m[1].replace(/,/g, ""));
+          }
+          if (/累计收益/.test(line) && !/已赎回/.test(line)) {
+            const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
+            if (m) result.totals.accumProfit = Number(m[1].replace(/,/g, ""));
+          }
+          if (/短期要用钱占比/.test(line)) result.totals.shortNeed = line.split("|")[2]?.trim();
+        }
+      }
+
+      // DCA plans table
+      const planStart = lines.findIndex(l => l.includes("## 定投计划"));
+      if (planStart >= 0) {
+        for (let i = planStart; i < lines.length; i++) {
+          if (/^\| \d+ /.test(lines[i])) break;
+          if (/^\|\s*\*\*?.+\|/.test(lines[i]) && i > planStart + 2) {
+            const cols = lines[i].split("|").map(s => s.trim()).filter(Boolean);
+            if (cols.length >= 5 && cols[0] !== "基金") {
+              result.plans.push({
+                fund: cleanMd(cols[0]),
+                freq: cleanMd(cols[1]),
+                amount: cleanMd(cols[2]),
+                status: cleanMd(cols[3]),
+                note: cleanMd(cols[4])
+              });
+            }
+          }
+        }
+      }
+
+      // holdings table
+      const holdStart = lines.findIndex(l => l.includes("## 持仓明细"));
+      if (holdStart >= 0) {
+        for (let i = holdStart; i < lines.length; i++) {
+          if (/^## /.test(lines[i]) && i > holdStart + 4) break;
+          if (/^\|\s*\d+\s*\|/.test(lines[i])) {
+            const cols = lines[i].split("|").map(s => s.trim()).filter(Boolean);
+            if (cols.length >= 9) {
+              result.holdings.push({
+                rank: cleanMd(cols[0]),
+                name: cleanMd(cols[1]),
+                shares: cleanMd(cols[2]),
+                cost: cleanMd(cols[3]),
+                value: parseNumber(cols[4]),
+                ratio: parsePercent(cols[5]),
+                sector: cleanMd(cols[6]),
+                detail: cleanMd(cols[7]),
+                note: cleanMd(cols[8])
+              });
+            }
+          }
+        }
+      }
+
+      // group table
+      const groupStart = lines.findIndex(l => l.includes("## 赌注群汇总"));
+      if (groupStart >= 0) {
+        for (let i = groupStart; i < lines.length; i++) {
+          if (/^## /.test(lines[i]) && i > groupStart + 4) break;
+          if (/^\|/.test(lines[i]) && /%/.test(lines[i]) && lines[i].includes("**")) {
+            const cols = lines[i].split("|").map(s => s.trim()).filter(Boolean);
+            if (cols.length >= 5) {
+              result.groups.push({
+                name: cleanMd(cols[0]),
+                funds: cleanMd(cols[1]),
+                value: cleanMd(cols[2]),
+                ratio: cleanMd(cols[3]),
+                note: cleanMd(cols[4])
+              });
+            }
+          }
+        }
+      }
+
+      // todo list — 兼容「| 第X批 |」旧格式与「| 7/8 |」执行日志格式
+      const todoStart = lines.findIndex(l => l.includes("## 东吴多策略转换计划"));
+      if (todoStart >= 0) {
+        let sectionEnd = lines.length;
+        for (let i = todoStart + 1; i < lines.length; i++) {
+          if (/^## /.test(lines[i])) { sectionEnd = i; break; }
+        }
+        const sectionLines = lines.slice(todoStart, sectionEnd);
+        for (const line of sectionLines) {
+          if (/^\| 第/.test(line)) {
+            const cols = line.split("|").map(s => s.trim()).filter(Boolean);
+            if (cols.length >= 4) {
+              result.todo.push({
+                batch: cleanMd(cols[0]),
+                date: cleanMd(cols[1]),
+                amount: cleanMd(cols[2]),
+                reason: cleanMd(cols[3])
+              });
+            }
+            continue;
+          }
+          const dateRowMatch = line.match(/^\|\s*(\d{1,2}\/\d{1,2})\s*\|/);
+          if (dateRowMatch && !line.includes("批次") && !line.includes("---")) {
+            const cols = line.split("|").map(s => s.trim()).filter(Boolean);
+            if (cols.length >= 4 && /^\d{1,2}\/\d{1,2}$/.test(cols[0])) {
+              result.todo.push({
+                batch: cleanMd(cols[0]),
+                date: cleanMd(cols[0]),
+                planned: cleanMd(cols[1]),
+                actual: cleanMd(cols[2]),
+                status: cleanMd(cols[3]),
+                amount: cleanMd(cols[2]),
+                reason: `${cleanMd(cols[1])} → ${cleanMd(cols[3])}`
+              });
+            }
+          }
+        }
+        const nextStepLine = sectionLines.find(l => /\*\*下一步\*\*/.test(l));
+        if (nextStepLine) {
+          const text = cleanMd(nextStepLine.replace(/^\>\s*/, "").replace(/\*\*下一步\*\*[：:]\s*/, ""));
+          if (text) {
+            result.todo.push({
+              batch: "下一步",
+              date: "待执行",
+              actual: text,
+              amount: text,
+              reason: "当前优先操作",
+              status: "pending"
+            });
+          }
+        }
+        result.hasDongwuSection = true;
+      }
+
+      return result;
+    }
+
+    function parseDiscipline(md) {
+      const full = String(md || "");
+      const cards = [];
+      full.split(/\n(?=##\s+)/).forEach((block) => {
+        const titleMatch = block.match(/^##\s+(.+)/);
+        if (!titleMatch) return;
+        const title = titleMatch[1].trim();
+        const body = block.replace(/^##\s+.+\n?/, "").trim();
+        cards.push({ title, body });
+      });
+      return {
+        hasTechLimitWarn: full.includes("科技链") && full.includes("超限"),
+        hasDefenseWarn: full.includes("防守资产") && full.includes("仅"),
+        summary: full.split("\n").slice(8, 24).join("\n"),
+        full,
+        cards
+      };
+    }
+
+    function disciplineCardClass(title) {
+      const t = String(title || "");
+      if (/买入/.test(t)) return "buy";
+      if (/止盈/.test(t)) return "profit";
+      if (/止损/.test(t)) return "stop";
+      if (/结构|上限/.test(t)) return "struct";
+      return "default";
+    }
+
+    function parseGlossaryTermsFromMarkdown(md, opts = {}) {
+      const source = opts.source || "glossary";
+      const skipSections = opts.skipSections || [/^基金小白词典/, /^我的个性化词典/, /^使用规则$/, /^示例条目/];
+      const text = String(md || "").trim();
+      if (!text) return [];
+      const terms = [];
+      const seen = new Set();
+      text.split(/\n(?=##\s+)/).forEach((sectionBlock) => {
+        const sectionMatch = sectionBlock.match(/^##\s+(.+)/);
+        if (!sectionMatch) return;
+        const category = sectionMatch[1].trim();
+        if (skipSections.some((rx) => rx.test(category))) return;
+        const body = sectionBlock.replace(/^##\s+.+\n?/, "");
+        const chunks = body.split(/\n(?=\*\*[^*]+\*\*)/);
+        chunks.forEach((chunk) => {
+          const termMatch = chunk.match(/^\*\*([^*]+?)\*\*\s*[：:]?\s*/);
+          if (!termMatch) return;
+          const term = termMatch[1].trim();
+          const definition = chunk.replace(/^\*\*[^*]+\*\*\s*[：:]?\s*/, "").trim();
+          if (!term || !definition) return;
+          const key = `${category}::${term}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          terms.push({ term, definition, category, source });
+        });
+      });
+      return terms;
+    }
+
+    function mergeGlossaryTerms(baseMd, personalMd) {
+      const personal = parseGlossaryTermsFromMarkdown(personalMd, { source: "personal" });
+      const personalKeys = new Set(personal.map((t) => `${t.category}::${t.term}`));
+      const base = parseGlossaryTermsFromMarkdown(baseMd, { source: "base" })
+        .filter((t) => !personalKeys.has(`${t.category}::${t.term}`));
+      return [...personal, ...base];
+    }
+
+    function resolveMoodLabel(raw) {
+      const text = String(raw || "").trim();
+      if (!text) return null;
+      const found = MOOD_OPTIONS.find((m) => text.includes(m.label) || text.includes(m.emoji));
+      return found || { id: "custom", label: text.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, "").slice(0, 8) || "其他", emoji: "📝" };
+    }
+
+    function getMoodById(id) {
+      return MOOD_OPTIONS.find((m) => m.id === id) || null;
+    }
+
+    function formatMoodLine(mood) {
+      if (!mood?.label) return "";
+      return `> 心情：${mood.label} ${mood.emoji || ""}`;
+    }
+
+    function upsertMoodInJournalMarkdown(text, mood) {
+      const content = String(text || "");
+      const moodLine = formatMoodLine(mood);
+      const moodRx = /^>\s*心情[：:].*$/m;
+      if (moodRx.test(content)) {
+        if (!moodLine) {
+          return content.replace(moodRx, "").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+        }
+        return content.replace(moodRx, moodLine);
+      }
+      if (!moodLine) return content;
+      const h2Match = content.match(/^##\s+.+$/m);
+      if (h2Match) {
+        const idx = content.indexOf(h2Match[0]) + h2Match[0].length;
+        return content.slice(0, idx) + "\n\n" + moodLine + content.slice(idx);
+      }
+      const h1Match = content.match(/^#\s+.+$/m);
+      if (h1Match) {
+        const idx = content.indexOf(h1Match[0]) + h1Match[0].length;
+        return content.slice(0, idx) + "\n\n" + moodLine + content.slice(idx);
+      }
+      return `${moodLine}\n\n${content}`;
+    }
+
+    function journalEntryWritable(entry) {
+      return !!(entry?.date && /^\d{4}-\d{2}-\d{2}$/.test(entry.date) && !entry.legacy);
+    }
+
+    async function updateReviewJournalMood(entry, mood) {
+      if (!journalEntryWritable(entry)) {
+        throw new Error("这篇日记在旧版单文件里，请先迁移到 assets/review-journal/日期.md");
+      }
+      if (!appState.dirHandle) throw new Error("未授权项目目录");
+      const ok = await ensureDirWritePermission();
+      if (!ok) throw new Error("需要目录写入权限");
+      const rel = `${REVIEW_JOURNAL_DIR}/${entry.date}.md`;
+      const read = await readFileHandleText(appState.dirHandle, rel);
+      const updated = upsertMoodInJournalMarkdown(read.text, mood);
+      await writeFileHandleText(appState.dirHandle, rel, updated);
+      return rel;
+    }
+
+    function renderMoodChipPicker(root, { activeId, onPick }) {
+      if (!root) return;
+      root.innerHTML = MOOD_OPTIONS.map((m) => `
+        <button type="button" class="mood-chip ${activeId === m.id ? "active" : ""}" data-mood-id="${m.id}">
+          ${m.emoji} ${esc(m.label)}
+        </button>
+      `).join("");
+      root.querySelectorAll(".mood-chip").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          onPick(getMoodById(btn.dataset.moodId));
+        };
+      });
+    }
+
+    function closeJournalMoodPopover() {
+      const pop = $("journalMoodPopover");
+      if (pop) pop.hidden = true;
+      appState.activeJournalMoodEntry = null;
+    }
+
+    async function saveJournalMood(entry, mood, statusEl) {
+      if (!entry) return;
+      if (statusEl) statusEl.textContent = "保存中…";
+      try {
+        const path = await updateReviewJournalMood(entry, mood);
+        if (statusEl) statusEl.textContent = `已保存到 ${path}`;
+        closeJournalMoodPopover();
+        await loadFromDirectory();
+        refreshUI();
+        if (appState.activeJournalDocEntry?.date === entry.date) {
+          openJournalDoc(appState.parsed.reviewJournal?.find((e) => e.date === entry.date) || entry);
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = "保存失败：" + err.message;
+      }
+    }
+
+    function openJournalMoodPopover(entry, anchorEl) {
+      const pop = $("journalMoodPopover");
+      const picker = $("journalMoodPopoverPicker");
+      const status = $("journalMoodPopoverStatus");
+      if (!pop || !picker || !anchorEl) return;
+      if (!journalEntryWritable(entry)) {
+        if (status) status.textContent = "这篇在旧版文件里，暂时不能在这里改心情。";
+      } else if (status) {
+        status.textContent = appState.dirHandle ? "" : "需先授权项目目录（可写入）。";
+      }
+      appState.activeJournalMoodEntry = entry;
+      $("journalMoodPopoverTitle").textContent = entry.mood
+        ? `修改心情 · ${entry.date}`
+        : `给这篇日记选心情 · ${entry.date}`;
+      renderMoodChipPicker(picker, {
+        activeId: entry.mood?.id,
+        onPick: (mood) => saveJournalMood(entry, mood, status)
+      });
+      const rect = anchorEl.getBoundingClientRect();
+      pop.hidden = false;
+      pop.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 180)}px`;
+      pop.style.left = `${Math.min(rect.left, window.innerWidth - 240)}px`;
+    }
+
+    function bindJournalMoodPopoverGlobal() {
+      if (document.body.dataset.journalMoodBound === "1") return;
+      document.body.dataset.journalMoodBound = "1";
+      document.addEventListener("click", (e) => {
+        const pop = $("journalMoodPopover");
+        if (!pop || pop.hidden) return;
+        if (e.target.closest("#journalMoodPopover") || e.target.closest(".journal-mood-btn")) return;
+        closeJournalMoodPopover();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeJournalMoodPopover();
+      });
+    }
+
+    function openJournalDoc(entry) {
+      appState.activeJournalDocEntry = entry;
+      $("hubDocTitle").textContent = `复盘｜${entry.title || entry.month}`;
+      $("hubDocContent").innerHTML = markdownToHtml(entry.body || "暂无详情");
+      const moodBox = $("journalDocMood");
+      const moodPicker = $("journalDocMoodPicker");
+      const moodStatus = $("journalDocMoodStatus");
+      if (!moodBox || !moodPicker) {
+        switchTab("hubdoc");
+        return;
+      }
+      if (!journalEntryWritable(entry)) {
+        moodBox.hidden = true;
+      } else {
+        moodBox.hidden = false;
+        $("journalDocMoodLabel").textContent = entry.mood
+          ? `这篇日记的心情：${entry.mood.emoji} ${entry.mood.label}（可修改）`
+          : "这篇日记还没记心情，选一个吧：";
+        moodStatus.textContent = appState.dirHandle ? "" : "需先授权项目目录（可写入）。";
+        renderMoodChipPicker(moodPicker, {
+          activeId: entry.mood?.id,
+          onPick: (mood) => saveJournalMood(entry, mood, moodStatus)
+        });
+      }
+      switchTab("hubdoc");
+    }
+
+    function getHiddenQAIds() {
+      try {
+        return JSON.parse(localStorage.getItem(HIDDEN_QA_KEY) || "[]");
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function hideQAItem(id) {
+      const hidden = getHiddenQAIds();
+      if (!hidden.includes(id)) {
+        hidden.push(id);
+        localStorage.setItem(HIDDEN_QA_KEY, JSON.stringify(hidden));
+      }
+    }
+
+    function qaItemId(sec) {
+      return `${sec.date || ""}|${sec.title || ""}`;
+    }
+
+    function glossaryTermPreview(definition) {
+      const plain = String(definition || "").replace(/\*\*/g, "").replace(/\n/g, " ").trim();
+      return plain.length > 48 ? plain.slice(0, 48) + "…" : plain;
+    }
+
+    function openGlossaryModal(term) {
+      const modal = $("glossaryModal");
+      const card = $("glossaryModalCard");
+      if (!modal || !card) return;
+      $("glossaryModalTerm").textContent = term.term || "—";
+      $("glossaryModalBody").innerHTML = markdownToHtml(
+        (term.category ? `**${term.category}**\n\n` : "") + (term.definition || "暂无解释")
+      );
+      card.classList.remove("is-flipped");
+      modal.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeGlossaryModal() {
+      const modal = $("glossaryModal");
+      if (!modal) return;
+      modal.hidden = true;
+      $("glossaryModalCard")?.classList.remove("is-flipped");
+      document.body.style.overflow = "";
+    }
+
+    function bindGlossaryModalEvents() {
+      const modal = $("glossaryModal");
+      if (!modal || modal.dataset.bound === "1") return;
+      modal.dataset.bound = "1";
+      $("glossaryModalBackdrop")?.addEventListener("click", closeGlossaryModal);
+      $("glossaryModalClose")?.addEventListener("click", closeGlossaryModal);
+      $("glossaryModalCard")?.addEventListener("click", () => {
+        $("glossaryModalCard").classList.toggle("is-flipped");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.hidden) closeGlossaryModal();
+      });
+    }
+
+    function ensureMoodPicker() {
+      const root = $("reviewMoodPicker");
+      if (!root || root.dataset.bound === "1") return;
+      root.dataset.bound = "1";
+      root.innerHTML = MOOD_OPTIONS.map((m) => `
+        <button type="button" class="mood-chip" data-mood-id="${m.id}">${m.emoji} ${esc(m.label)}</button>
+      `).join("");
+      root.querySelectorAll(".mood-chip").forEach((btn) => {
+        btn.onclick = () => {
+          root.querySelectorAll(".mood-chip").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          root.dataset.selected = btn.dataset.moodId;
+        };
+      });
+    }
+
+    function getSelectedReviewMood() {
+      const id = $("reviewMoodPicker")?.dataset.selected;
+      return id ? getMoodById(id) : null;
+    }
+
+    function renderMoodCalendar(entries) {
+      const root = $("moodCalendar");
+      const label = $("moodCalMonthLabel");
+      const statsRoot = $("moodStats");
+      if (!root || !label) return;
+      if (!appState.moodCalView) {
+        const now = new Date();
+        appState.moodCalView = { year: now.getFullYear(), month: now.getMonth() };
+      }
+      const { year, month } = appState.moodCalView;
+      label.textContent = `${year}年${month + 1}月`;
+      const moodMap = {};
+      (entries || []).forEach((e) => {
+        if (e.date && e.mood) moodMap[e.date] = e.mood;
+      });
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
+      const counts = {};
+      MOOD_OPTIONS.forEach((m) => { counts[m.id] = 0; });
+      Object.entries(moodMap).forEach(([date, mood]) => {
+        if (!date.startsWith(monthPrefix)) return;
+        const key = mood.id || "custom";
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      if (statsRoot) {
+        const rows = MOOD_OPTIONS
+          .filter((m) => counts[m.id] > 0)
+          .map((m) => `
+            <div class="mood-stat-row">
+              <span>${m.emoji} ${esc(m.label)}</span>
+              <strong>${counts[m.id]} 天</strong>
+            </div>
+          `).join("");
+        statsRoot.innerHTML = `
+          <h4>本月心情</h4>
+          ${rows || '<div class="muted">本月还没有记录心情</div>'}
+        `;
+      }
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const startPad = new Date(year, month, 1).getDay();
+      const today = localDateStr();
+      const cells = [];
+      for (let i = 0; i < startPad; i++) cells.push(`<div class="cal-cell empty"></div>`);
+      for (let d = 1; d <= lastDay; d++) {
+        const dateStr = `${monthPrefix}-${String(d).padStart(2, "0")}`;
+        const mood = moodMap[dateStr];
+        const isToday = dateStr === today;
+        const hasMood = !!mood;
+        const dayLabel = isToday ? "今" : d;
+        const moodCls = hasMood ? "gain" : "pending";
+        const todayCls = isToday ? "today" : "";
+        cells.push(`
+          <div class="cal-cell ${moodCls} ${todayCls}" title="${mood ? esc(mood.label) : ""}">
+            <span class="day">${dayLabel}</span>
+            <span class="amt mood-emoji">${hasMood ? mood.emoji : ""}</span>
+          </div>
+        `);
+      }
+      root.innerHTML = cells.join("");
+    }
+
+    function bindMoodCalendarNav(entries) {
+      const prev = $("moodCalPrev");
+      const next = $("moodCalNext");
+      if (!prev || prev.dataset.bound === "1") return;
+      prev.dataset.bound = "1";
+      prev.onclick = () => {
+        if (!appState.moodCalView) appState.moodCalView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+        appState.moodCalView.month -= 1;
+        if (appState.moodCalView.month < 0) {
+          appState.moodCalView.month = 11;
+          appState.moodCalView.year -= 1;
+        }
+        renderMoodCalendar(entries);
+      };
+      next.onclick = () => {
+        if (!appState.moodCalView) appState.moodCalView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+        appState.moodCalView.month += 1;
+        if (appState.moodCalView.month > 11) {
+          appState.moodCalView.month = 0;
+          appState.moodCalView.year += 1;
+        }
+        renderMoodCalendar(entries);
+      };
+    }
+
+    function parseReviewJournalLegacy(md) {
+      const text = String(md || "").trim();
+      if (!text) return [];
+      const entries = [];
+      text.split(/\n(?=##\s+)/).forEach((block) => {
+        if (!/^##\s+/.test(block)) return;
+        const titleMatch = block.match(/^##\s+(.+)/);
+        if (!titleMatch) return;
+        const title = titleMatch[1].trim();
+        if (/模板|每次复制/.test(title)) return;
+        const monthMatch = title.match(/(\d{4}-\d{2})/);
+        entries.push({
+          month: monthMatch ? monthMatch[1] : title.slice(0, 7),
+          title,
+          date: monthMatch ? monthMatch[1] : title,
+          body: block.trim(),
+          source: "review-journal.md",
+          legacy: true
+        });
+      });
+      return entries;
+    }
+
+    function parseReviewJournalFromDirectory(dirReports) {
+      const entries = [];
+      (dirReports || []).forEach((file) => {
+        const stem = file.name.replace(/\.md$/i, "");
+        const text = String(file.text || "").trim();
+        if (!text) return;
+        const h1 = text.match(/^#\s+(.+)/m);
+        const h2 = text.match(/^##\s+(.+)/m);
+        const title = h2 ? h2[1].trim() : (h1 ? h1[1].replace(/^复盘\s*·\s*/, "").trim() : `${stem} 复盘`);
+        const moodMatch = text.match(/>\s*心情[：:]\s*([^\n]+)/);
+        const moodRaw = moodMatch ? moodMatch[1].trim() : "";
+        const mood = resolveMoodLabel(moodRaw);
+        entries.push({
+          date: stem,
+          month: /^\d{4}-\d{2}-\d{2}$/.test(stem) ? stem.slice(0, 7) : stem,
+          title,
+          body: text,
+          mood,
+          moodRaw,
+          source: file.name,
+          updated: file.updated
+        });
+      });
+      return entries;
+    }
+
+    function mergeReviewJournalEntries(dirEntries, legacyEntries) {
+      const all = [...(dirEntries || []), ...(legacyEntries || [])];
+      all.sort((a, b) => {
+        const da = String(a.date || a.month || "");
+        const db = String(b.date || b.month || "");
+        return db.localeCompare(da);
+      });
+      return all;
+    }
+
+    function parseResearchReports(portfolioMd, dirReports) {
+      const reports = [];
+      (dirReports || []).forEach((item) => {
+        const text = String(item?.text || "").trim();
+        if (!text) return;
+        const titleMatch = text.match(/^#\s*(.+)$/m);
+        const dateMatch = text.match(/研究日期[：:]\s*(\d{4}-\d{2}-\d{2})/);
+        reports.push({
+          title: cleanMd(titleMatch ? titleMatch[1] : String(item.name || "").replace(/\.md$/i, "")),
+          date: dateMatch ? dateMatch[1] : "已归档",
+          body: text
+        });
+      });
+      reports.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      const holdings = String(portfolioMd || "").split(/\r?\n/);
+      holdings.forEach((line) => {
+        if (/^\|\s*\d+\s*\|/.test(line)) {
+          const cols = line.split("|").map(s => s.trim()).filter(Boolean);
+          if (cols[1]) {
+            const name = cleanMd(cols[1]);
+            if (!reports.find(r => r.title.includes(name))) {
+              reports.push({
+                title: `${name}（待补充）`,
+                date: "待研究",
+                body: `# ${name}\n\n暂无穿透研究记录。\n\n- 建议在聊天中执行：\`/fund-lab 透视 ${name}\`\n- 生成后写入 \`assets/fund-research/\` 并刷新看板。`
+              });
+            }
+          }
+        }
+      });
+      return reports.slice(0, 30);
+    }
+
+    function parseWeeklyBriefs(md) {
+      const text = String(md || "").trim();
+      if (!text) return [];
+      const blocks = text.split(/\n(?=##\s*环境简报\s*·\s*\d{4}-\d{2}-\d{2})/g);
+      const reports = [];
+      blocks.forEach((block) => {
+        const dateMatch = block.match(/##\s*环境简报\s*·\s*(\d{4}-\d{2}-\d{2})/);
+        if (!dateMatch) return;
+        const date = dateMatch[1];
+        const lines = block.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const sentence = lines.find(line => line && !line.startsWith("#") && !line.startsWith("|") && !line.startsWith(">") && !line.startsWith("- ") && !/^\d+\./.test(line));
+        const summary = (sentence || `环境简报 ${date}`).slice(0, 80);
+        reports.push({
+          date,
+          summary,
+          full: block.trim()
+        });
+      });
+      return reports.sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function parseWeeklyBriefsFromDirectory(dirReports) {
+      const list = Array.isArray(dirReports) ? dirReports : [];
+      const reports = [];
+      list.forEach((item) => {
+        const name = String(item?.name || "");
+        const text = String(item?.text || "").trim();
+        if (!name.endsWith(".md") || !text) return;
+        const dateFromName = name.match(/(\d{4}-\d{2}-\d{2})\.md$/);
+        const dateFromTitle = text.match(/环境简报\s*·\s*(\d{4}-\d{2}-\d{2})/);
+        const date = (dateFromName && dateFromName[1]) || (dateFromTitle && dateFromTitle[1]);
+        if (!date) return;
+        const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const sentence = lines.find(line =>
+          line &&
+          !line.startsWith("#") &&
+          !line.startsWith("|") &&
+          !line.startsWith(">") &&
+          !line.startsWith("- ") &&
+          !/^\d+\./.test(line)
+        );
+        reports.push({
+          date,
+          summary: (sentence || `环境简报 ${date}`).slice(0, 80),
+          full: text
+        });
+      });
+      return reports.sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function splitMarkdownRow(line) {
+      const raw = String(line || "").trim();
+      if (!raw.startsWith("|")) return [];
+      const body = raw.replace(/^\|/, "").replace(/\|$/, "");
+      return body.split("|").map(s => s.trim());
+    }
+
+    function parseDailySnapshots(md) {
+      const text = String(md || "").trim();
+      if (!text) return { rows: [], latest: null };
+      const rows = [];
+      text.split(/\r?\n/).forEach((line) => {
+        if (!/^\|\s*\d{4}-\d{2}-\d{2}\s*\|/.test(line)) return;
+        const cols = splitMarkdownRow(line);
+        if (cols.length < 11) return;
+        const num = (v) => {
+          const s = String(v || "").replace(/,/g, "").trim();
+          if (!s || s === "待每日 automation 更新" || /^待/.test(s)) return null;
+          const n = Number(s.replace("%", ""));
+          return Number.isNaN(n) ? null : n;
+        };
+        rows.push({
+          date: cols[0],
+          total_assets: num(cols[1]),
+          equity: num(cols[2]),
+          cash: num(cols[3]),
+          tech_ratio: cols[4],
+          defense_ratio: cols[5],
+          holding_profit: num(cols[6]),
+          accum_profit: num(cols[7]),
+          daily_profit: num(cols[8]),
+          yesterday_profit: num(cols[9]),
+          data_status: cols[10]
+        });
+      });
+      rows.sort((a, b) => a.date.localeCompare(b.date));
+      return { rows, latest: rows.length ? rows[rows.length - 1] : null };
+    }
+
+    function prevDayDailyProfit(rows, latestDate) {
+      if (!latestDate || !rows?.length) return null;
+      const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
+      const idx = sorted.findIndex((r) => r.date === latestDate);
+      if (idx <= 0) return null;
+      const v = sorted[idx - 1].daily_profit;
+      return v != null && !Number.isNaN(v) ? v : null;
+    }
+
+    function pickKpiData(portfolio, snapshots) {
+      const p = portfolio?.totals || {};
+      const rows = snapshots?.rows || [];
+      const snap = snapshots?.latest || null;
+      const lastNonNull = (key) => {
+        for (let i = rows.length - 1; i >= 0; i--) {
+          const v = rows[i]?.[key];
+          if (v != null && !Number.isNaN(v)) return v;
+        }
+        return null;
+      };
+      const alipay = p.alipayTotal ?? null;
+      const nanfang = p.nanfangTotal ?? null;
+      const platformTotal = (alipay != null && nanfang != null) ? alipay + nanfang : null;
+      const total =
+        snap?.total_assets ??
+        lastNonNull("total_assets") ??
+        p.total ??
+        platformTotal ??
+        p.equity ??
+        null;
+      const todayProfit =
+        snap?.daily_profit ??
+        lastNonNull("daily_profit") ??
+        p.daily ??
+        null;
+      const yesterdayProfit =
+        prevDayDailyProfit(rows, snap?.date) ??
+        snap?.yesterday_profit ??
+        lastNonNull("yesterday_profit") ??
+        p.yesterdayProfit ??
+        null;
+      const holdingProfit =
+        snap?.holding_profit ??
+        lastNonNull("holding_profit") ??
+        p.holdingProfit ??
+        null;
+      const accumProfit =
+        snap?.accum_profit ??
+        lastNonNull("accum_profit") ??
+        p.accumProfit ??
+        null;
+      const sources = [];
+      if (snap?.total_assets != null || snap?.daily_profit != null) sources.push("daily-snapshots");
+      if (p.alipayTotal != null || p.nanfangTotal != null || p.total != null) sources.push("portfolio-template");
+      const sourceNote = sources.length
+        ? `数据口径：支付宝 + 南方基金；来源 ${[...new Set(sources)].join(" + ")}`
+        : "数据口径：支付宝 + 南方基金；请更新 portfolio-template.md 或 daily-snapshots.md";
+      return { total, todayProfit, yesterdayProfit, holdingProfit, accumProfit, sourceNote };
+    }
+
+    function isQADateNoise(text, index, date) {
+      const before = text.slice(Math.max(0, index - 48), index);
+      const after = text.slice(index + date.length, index + date.length + 24);
+      if (/https?:\/\/\S*$/.test(before) || /\/$/.test(before)) return true;
+      if (/[（(]\s*$/.test(before) && /^数据[)）]/.test(after)) return true;
+      if (/天天基金|基金官网|官网、|季报|年报|半年报/.test(before + date + after)) return true;
+      return false;
+    }
+
+    function extractQADate(block, sectionDate) {
+      const headerRegion = block.split("\n").slice(0, 6).join("\n");
+      const headerParen = headerRegion.match(/[（(](\d{4}-\d{2}-\d{2})(?:\s+[^）)]*)?[)）]/);
+      if (headerParen) return headerParen[1];
+
+      if (sectionDate) return sectionDate;
+
+      const matches = [...block.matchAll(/(\d{4}-\d{2}-\d{2})/g)];
+      for (const match of matches) {
+        if (!isQADateNoise(block, match.index, match[1])) return match[1];
+      }
+      return "未标注日期";
+    }
+
+    function parseQALog(md) {
+      const sections = [];
+      let sectionDate = null;
+      const questionRe = /\*\*问题(?:（[^）]*）)?\*\*[:：]\s*(.+)/g;
+      const blocks = md.split(/\n---\n/g);
+      blocks.forEach(block => {
+        const sectionHeader = block.match(/^##\s+(\d{4}-\d{2}-\d{2})\s*$/m);
+        if (sectionHeader) sectionDate = sectionHeader[1];
+
+        const matches = [...block.matchAll(questionRe)];
+        if (!matches.length) return;
+
+        matches.forEach((match, idx) => {
+          const start = match.index;
+          const end = idx + 1 < matches.length ? matches[idx + 1].index : block.length;
+          const entryBody = block.slice(start, end).trim();
+          sections.push({
+            title: match[1].trim(),
+            date: extractQADate(entryBody, sectionDate),
+            body: entryBody
+          });
+        });
+      });
+      sections.sort((a, b) => {
+        const da = a.date === "未标注日期" ? "" : a.date;
+        const db = b.date === "未标注日期" ? "" : b.date;
+        return db.localeCompare(da) || 0;
+      });
+      // brief from latest environment mention
+      const envAnchor = md.lastIndexOf("环境");
+      const latestEnv = envAnchor > -1 ? md.slice(Math.max(0, envAnchor - 300), Math.min(md.length, envAnchor + 500)) : "";
+      // QA_Log 主要用于时间线，不再从中“猜测”周报，避免误提取导致简报内容错乱
+      const weeklyReports = [];
+      return { sections, latestEnv, weeklyReports };
+    }
+
+    function reportLooksValid(report) {
+      if (!report) return false;
+      const text = `${report.summary || ""}\n${report.full || ""}`;
+      if (text.length < 80) return false;
+      const hasCore = /任务1|任务2|转出|转入比例|宽基|中短债|黄金|现金/.test(text);
+      return hasCore;
+    }
+
+    function addSnapshot(total, daily) {
+      const raw = localStorage.getItem(SNAPSHOT_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      const today = localDateStr();
+      const existing = list.find(x => x.date === today);
+      if (existing) {
+        existing.total = total;
+        existing.daily = daily;
+      } else {
+        list.push({ date: today, total, daily });
+      }
+      while (list.length > 30) list.shift();
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list));
+      return list.sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function getYesterdayProfit(list) {
+      if (!list || !list.length) return null;
+      if (list.length >= 2) {
+        const prev = list[list.length - 2].total || 0;
+        const last = list[list.length - 1].total || 0;
+        return last - prev;
+      }
+      return list[list.length - 1].daily ?? null;
+    }
+
+    function prepareHiDPICanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const cssWidth = Math.max(320, Math.floor(canvas.clientWidth || 760));
+      const cssHeight = 210;
+      const pixelWidth = Math.floor(cssWidth * dpr);
+      const pixelHeight = Math.floor(cssHeight * dpr);
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+      }
+      canvas.style.height = `${cssHeight}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width: cssWidth, height: cssHeight };
+    }
+
+    function drawTrend(rows) {
+      const canvas = $("trendChart");
+      const { ctx, width, height } = prepareHiDPICanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fbfcff";
+      ctx.fillRect(0, 0, width, height);
+      if (!rows.length) {
+        ctx.fillStyle = "#4d5b8f";
+        ctx.font = "12px Arial";
+        ctx.fillText("暂无 daily-snapshots 数据", 12, 20);
+        return;
+      }
+
+      const parsedRows = rows
+        .map((r) => ({
+          date: r.date,
+          total: r.total_assets ?? r.total ?? null,
+          daily: r.daily_profit ?? r.yesterday_profit ?? r.daily ?? null
+        }))
+        .filter((r) => r.total != null || r.daily != null);
+      if (!parsedRows.length) return;
+
+      const totalVals = parsedRows.map(r => Number(r.total || 0));
+      const dailyVals = parsedRows.map(r => Number(r.daily || 0));
+      const totalMin = Math.min(...totalVals);
+      const totalMax = Math.max(...totalVals);
+      const dailyAbsMax = Math.max(1, ...dailyVals.map(v => Math.abs(v)));
+
+      const left = 64;
+      const right = width - 16;
+      const top = 26;
+      const bottom = height - 44;
+      const w = right - left;
+      const h = bottom - top;
+      const xOf = (idx) => left + (w * idx / Math.max(1, parsedRows.length - 1));
+      const yTotal = (v) => {
+        const pad = Math.max(20, (totalMax - totalMin) * 0.15);
+        const min = totalMin - pad;
+        const max = totalMax + pad;
+        return bottom - ((v - min) / (max - min || 1)) * h;
+      };
+      const yDaily = (v) => {
+        const max = dailyAbsMax * 1.2;
+        const min = -max;
+        return bottom - ((v - min) / (max - min || 1)) * h;
+      };
+      appState.trendPoints = parsedRows.map((r, i) => ({
+        date: r.date,
+        total: Number(r.total || 0),
+        daily: Number(r.daily || 0),
+        x: xOf(i),
+        y: yTotal(r.total || 0)
+      }));
+
+      ctx.strokeStyle = "#dce3f7";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = top + (h / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#90a4db";
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#0e0f0c";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      parsedRows.forEach((p, i) => {
+        const x = xOf(i);
+        const y = yTotal(p.total || 0);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      parsedRows.forEach((p, i) => {
+        const x = xOf(i);
+        const y = yTotal(p.total || 0);
+        ctx.fillStyle = "#0e0f0c";
+        ctx.beginPath();
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = "#d06b00";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      parsedRows.forEach((p, i) => {
+        const x = xOf(i);
+        const y = yDaily(p.daily || 0);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      parsedRows.forEach((p, i) => {
+        const x = xOf(i);
+        const y = yDaily(p.daily || 0);
+        ctx.fillStyle = "#d06b00";
+        ctx.beginPath();
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#21242e";
+      ctx.font = "10px Arial";
+      const tickIdx = [0, Math.floor((parsedRows.length - 1) / 2), parsedRows.length - 1].filter((v, i, a) => a.indexOf(v) === i);
+      tickIdx.forEach((idx) => {
+        const x = xOf(idx);
+        const label = String(parsedRows[idx].date || "").slice(5) || `D${idx + 1}`;
+        ctx.fillText(label, x - 16, bottom + 14);
+      });
+
+      ctx.fillText("X轴：日期", right - 56, bottom + 28);
+      ctx.save();
+      ctx.translate(12, top + h / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Y轴：金额（元）", 0, 0);
+      ctx.restore();
+
+      ctx.fillStyle = "#163300";
+      ctx.fillRect(left, 6, 10, 2);
+      ctx.fillStyle = "#21242e";
+      ctx.fillText("总资产", left + 14, 10);
+      ctx.fillStyle = "#d06b00";
+      ctx.fillRect(left + 58, 6, 10, 2);
+      ctx.fillStyle = "#21242e";
+      ctx.fillText("当日收益", left + 72, 10);
+
+      const last = parsedRows[parsedRows.length - 1];
+      const totalMinIdx = totalVals.indexOf(Math.min(...totalVals));
+      const totalMaxIdx = totalVals.indexOf(Math.max(...totalVals));
+      const labelPoint = (idx, text, color, yGetter, yOffset = -6) => {
+        const x = xOf(idx);
+        const y = yGetter(parsedRows[idx]) + yOffset;
+        ctx.fillStyle = color;
+        ctx.font = "10px Arial";
+        ctx.fillText(text, x + 4, y);
+      };
+      labelPoint(parsedRows.length - 1, `总 ${Math.round(last.total || 0)}`, "#2d3f88", (p) => yTotal(p.total || 0));
+      labelPoint(parsedRows.length - 1, `日 ${Math.round(last.daily || 0)}`, "#b35d00", (p) => yDaily(p.daily || 0), 12);
+      labelPoint(totalMinIdx, `低 ${Math.round(parsedRows[totalMinIdx].total || 0)}`, "#4a5ea5", (p) => yTotal(p.total || 0));
+      labelPoint(totalMaxIdx, `高 ${Math.round(parsedRows[totalMaxIdx].total || 0)}`, "#4a5ea5", (p) => yTotal(p.total || 0), -10);
+      ctx.fillText(`最新 ${last.date}｜总资产 ¥${Math.round(last.total || 0).toLocaleString()}｜当日收益 ¥${Math.round(last.daily || 0).toLocaleString()}`, left, height - 8);
+    }
+
+    function renderTrendTable(rows) {
+      const root = $("trendDataTable");
+      if (!root) return;
+      if (!rows || !rows.length) {
+        root.innerHTML = `<div class="muted">暂无趋势明细数据。</div>`;
+        return;
+      }
+      const list = rows.map((r) => ({
+        date: r.date || "--",
+        total: r.total_assets ?? r.total ?? null,
+        daily: r.daily_profit ?? r.yesterday_profit ?? r.daily ?? null
+      }));
+      root.innerHTML = `
+        <table class="trend-table">
+          <thead>
+            <tr><th>日期</th><th>总资产</th><th>当日收益</th></tr>
+          </thead>
+          <tbody>
+            ${list.map((r) => `
+              <tr>
+                <td>${esc(r.date)}</td>
+                <td>${r.total == null ? "—" : formatMoney(r.total)}</td>
+                <td class="${profitClass(r.daily)}">${r.daily == null ? "—" : formatMoney(r.daily)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function bindTrendTooltip() {
+      const canvas = $("trendChart");
+      const tooltip = $("trendTooltip");
+      if (!canvas || !tooltip) return;
+      if (canvas.dataset.tooltipBound === "1") return;
+      canvas.dataset.tooltipBound = "1";
+
+      const hide = () => { tooltip.style.display = "none"; };
+      canvas.addEventListener("mouseleave", hide);
+      canvas.addEventListener("mousemove", (e) => {
+        const points = appState.trendPoints || [];
+        if (!points.length) return hide();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        let nearest = points[0];
+        let minD = Infinity;
+        points.forEach((p) => {
+          const d = Math.hypot(p.x - x, p.y - y);
+          if (d < minD) {
+            minD = d;
+            nearest = p;
+          }
+        });
+        if (minD > 28) return hide();
+        tooltip.innerHTML = `
+          <div><b>${esc(nearest.date || "--")}</b></div>
+          <div>总资产：${formatMoney(nearest.total)}</div>
+          <div class="${profitClass(nearest.daily)}">当日收益：${formatMoney(nearest.daily)}</div>
+        `;
+        tooltip.style.display = "block";
+        tooltip.style.left = `${Math.min(rect.width - 172, Math.max(8, nearest.x + 10))}px`;
+        tooltip.style.top = `${Math.min(rect.height - 76, Math.max(8, nearest.y - 34))}px`;
+      });
+    }
+
+    function formatMoney(v) {
+      if (v == null || Number.isNaN(v)) return "--";
+      return "¥" + Number(v).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+    }
+
+    function profitClass(v) {
+      if (v == null || Number.isNaN(v)) return "";
+      return Number(v) >= 0 ? "profit-up" : "profit-down";
+    }
+
+    function formatProfitShort(v) {
+      if (v == null || Number.isNaN(v)) return "未更新";
+      const n = Number(v);
+      const sign = n > 0 ? "+" : "";
+      return `${sign}${n.toFixed(2)}`;
+    }
+
+    function ensureCalView(rows) {
+      const latest = rows.length ? rows[rows.length - 1].date : localDateStr();
+      const [y, m] = latest.split("-").map(Number);
+      if (appState.calView.year == null) {
+        appState.calView.year = y;
+        appState.calView.month = m - 1;
+        appState.calView.selectedDate = latest;
+      }
+    }
+
+    function renderCalDayDetail(row, dateStr) {
+      const root = $("calDayDetail");
+      if (!row) {
+        root.innerHTML = `<div class="title">${esc(dateStr)} 当日收益明细</div><div class="muted">暂无记录（可能支付宝尚未更新或未写入 daily-snapshots）</div>`;
+        return;
+      }
+      root.innerHTML = `
+        <div class="title">${esc(dateStr)} 当日收益明细</div>
+        <div>当日收益：<span class="${profitClass(row.daily_profit)}">${row.daily_profit == null ? "未更新" : formatMoney(row.daily_profit)}</span></div>
+        <div>昨日收益（结转）：<span class="${profitClass(row.yesterday_profit)}">${row.yesterday_profit == null ? "—" : formatMoney(row.yesterday_profit)}</span></div>
+        <div>持有收益：<span class="${profitClass(row.holding_profit)}">${row.holding_profit == null ? "—" : formatMoney(row.holding_profit)}</span></div>
+        <div>累计收益：<span class="${profitClass(row.accum_profit)}">${row.accum_profit == null ? "—" : formatMoney(row.accum_profit)}</span></div>
+        <div>总资产：<span>${row.total_assets == null ? "—" : formatMoney(row.total_assets)}</span></div>
+        <div class="muted">状态：${esc(row.data_status || "—")}</div>
+      `;
+    }
+
+    function isWeekendDay(year, month, day) {
+      const dow = new Date(year, month, day).getDay();
+      return dow === 0 || dow === 6;
+    }
+
+    function renderProfitCalendar(rows) {
+      const list = rows || [];
+      ensureCalView(list);
+      const map = {};
+      list.forEach((r) => { map[r.date] = r; });
+      const { year, month } = appState.calView;
+      $("calMonthLabel").textContent = `${year}年${month + 1}月`;
+      const today = localDateStr();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const startPad = new Date(year, month, 1).getDay();
+      const cells = [];
+      for (let i = 0; i < startPad; i++) cells.push(`<div class="cal-cell empty"></div>`);
+      for (let d = 1; d <= lastDay; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const row = map[dateStr];
+        const weekend = isWeekendDay(year, month, d);
+        let profit = row?.daily_profit;
+        let pending = profit == null;
+        if (weekend && pending) {
+          profit = 0;
+          pending = false;
+        }
+        const gainLossCls = weekend ? "weekend" : (pending ? "pending" : (profit >= 0 ? "gain" : "loss"));
+        const amtCls = pending ? "" : profitClass(profit);
+        const selected = appState.calView.selectedDate === dateStr;
+        const selectedCls = selected ? "selected" : "";
+        const todayCls = dateStr === today ? "today" : "";
+        const dayLabel = dateStr === today ? "今" : d;
+        cells.push(`
+          <button type="button" class="cal-cell ${gainLossCls} ${selectedCls} ${todayCls}" data-date="${esc(dateStr)}">
+            <span class="day">${dayLabel}</span>
+            <span class="amt ${amtCls}">${formatProfitShort(profit)}</span>
+          </button>
+        `);
+      }
+      $("profitCalendar").innerHTML = cells.join("");
+      [...$("profitCalendar").querySelectorAll(".cal-cell[data-date]")].forEach((btn) => {
+        btn.onclick = () => {
+          appState.calView.selectedDate = btn.dataset.date;
+          renderProfitCalendar(list);
+        };
+      });
+      const selected = appState.calView.selectedDate || today;
+      renderCalDayDetail(map[selected], selected);
+    }
+
+    function setProfitViewMode(mode) {
+      const m = mode === "curve" ? "curve" : "calendar";
+      appState.calView.mode = m;
+      const calPane = $("profitCalendarView");
+      const curvePane = $("profitCurveView");
+      const modeLabel = $("calModeLabel");
+      if (calPane) calPane.hidden = m !== "calendar";
+      if (curvePane) curvePane.hidden = m !== "curve";
+      if (modeLabel) {
+        modeLabel.textContent = m === "curve" ? "日收益 · ¥ · 涨红跌绿" : "日 · ¥ · 涨红跌绿";
+      }
+      document.querySelectorAll(".profit-view-tab").forEach((btn) => {
+        const active = btn.dataset.profitView === m;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+    }
+
+    function refreshProfitMonthViews(rows) {
+      renderProfitCalendar(rows);
+      renderProfitCurve(rows);
+    }
+
+    function curveSegmentPaths(points, yOf) {
+      const segments = [];
+      for (let i = 0; i < points.length - 1; i++) {
+        const a = points[i];
+        const b = points[i + 1];
+        const va = a.value;
+        const vb = b.value;
+        if ((va >= 0 && vb >= 0) || (va <= 0 && vb <= 0)) {
+          segments.push({
+            d: `M ${a.x} ${a.y} L ${b.x} ${b.y}`,
+            cls: vb >= 0 ? "curve-line-up" : "curve-line-down"
+          });
+          continue;
+        }
+        const t = va / (va - vb);
+        const zx = a.x + (b.x - a.x) * t;
+        const zy = yOf(0);
+        if (va > 0) {
+          segments.push({ d: `M ${a.x} ${a.y} L ${zx} ${zy}`, cls: "curve-line-up" });
+          segments.push({ d: `M ${zx} ${zy} L ${b.x} ${b.y}`, cls: "curve-line-down" });
+        } else {
+          segments.push({ d: `M ${a.x} ${a.y} L ${zx} ${zy}`, cls: "curve-line-down" });
+          segments.push({ d: `M ${zx} ${zy} L ${b.x} ${b.y}`, cls: "curve-line-up" });
+        }
+      }
+      return segments;
+    }
+
+    function curveAreaPaths(points, yOf, zeroY) {
+      const areas = [];
+      let run = [];
+      const flush = (sign) => {
+        if (run.length < 2) { run = []; return; }
+        const cls = sign >= 0 ? "curve-area-up" : "curve-area-down";
+        const first = run[0];
+        const last = run[run.length - 1];
+        const path = [
+          `M ${first.x} ${zeroY}`,
+          ...run.map((p) => `L ${p.x} ${p.y}`),
+          `L ${last.x} ${zeroY}`,
+          "Z"
+        ].join(" ");
+        areas.push({ d: path, cls });
+        run = [];
+      };
+      points.forEach((p, i) => {
+        const sign = p.value >= 0 ? 1 : -1;
+        if (!run.length) {
+          run.push(p);
+          return;
+        }
+        const prev = points[i - 1];
+        if ((prev.value >= 0 && p.value >= 0) || (prev.value <= 0 && p.value <= 0)) {
+          run.push(p);
+          return;
+        }
+        const va = prev.value;
+        const vb = p.value;
+        const t = va / (va - vb);
+        const zx = prev.x + (p.x - prev.x) * t;
+        const zy = yOf(0);
+        run.push({ x: zx, y: zy, value: 0 });
+        flush(va >= 0 ? 1 : -1);
+        run.push({ x: zx, y: zy, value: 0 });
+        run.push(p);
+      });
+      if (run.length) flush(run[run.length - 1].value >= 0 ? 1 : -1);
+      return areas;
+    }
+
+    function monthLastDay(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function curveXOfDay(day, dayCount, padLeft, plotW) {
+      if (dayCount <= 1) return padLeft + plotW / 2;
+      return padLeft + (plotW * (day - 1) / (dayCount - 1));
+    }
+
+    function buildCurveXAxisMarkup(year, month, pad, width, height) {
+      const lastDay = monthLastDay(year, month);
+      const plotW = width - pad.left - pad.right;
+      const axisY = height - pad.bottom;
+      const labelY = axisY + 11;
+      const labels = [];
+      const ticks = [];
+      for (let d = 1; d <= lastDay; d++) {
+        const x = curveXOfDay(d, lastDay, pad.left, plotW);
+        const weekend = isWeekendDay(year, month, d);
+        const cls = weekend ? "curve-axis-label-weekend" : "curve-axis-label-x";
+        ticks.push(`<line class="curve-x-tick" x1="${x}" y1="${axisY}" x2="${x}" y2="${axisY + 3}" />`);
+        labels.push(`<text class="${cls}" x="${x}" y="${labelY}" text-anchor="middle">${d}</text>`);
+      }
+      const title = `<text class="curve-axis-title" x="${pad.left + plotW / 2}" y="${height - 2}" text-anchor="middle">日期</text>`;
+      return { ticks: ticks.join(""), labels: labels.join(""), title, dayCount: lastDay };
+    }
+
+    function bindCurveTooltip(wrap, points, svgWidth, svgHeight) {
+      const tooltip = wrap.querySelector(".curve-tooltip");
+      if (!tooltip) return;
+      wrap.querySelectorAll(".curve-hit").forEach((hit) => {
+        const idx = Number(hit.dataset.idx);
+        const pt = points[idx];
+        if (!pt) return;
+        hit.addEventListener("mouseenter", () => {
+          tooltip.style.display = "block";
+          tooltip.innerHTML = `
+            <div>${esc(pt.date)}</div>
+            <div class="${profitClass(pt.value)}">${formatMoney(pt.value)}</div>
+          `;
+          const rect = wrap.getBoundingClientRect();
+          const left = Math.min(rect.width - 140, Math.max(8, pt.x * (rect.width / svgWidth) - 66));
+          const top = Math.max(8, pt.y * (rect.height / svgHeight) - 42);
+          tooltip.style.left = `${left}px`;
+          tooltip.style.top = `${top}px`;
+        });
+        hit.addEventListener("mouseleave", () => {
+          tooltip.style.display = "none";
+        });
+      });
+    }
+
+    function renderProfitCurve(rows) {
+      const list = rows || [];
+      ensureCalView(list);
+      const { year, month } = appState.calView;
+      const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
+      const monthRows = list
+        .filter((r) => r.date.startsWith(prefix) && r.daily_profit != null)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const root = $("profitCurveChart");
+      const detail = $("profitCurveDetail");
+      if (!root) return;
+
+      $("calMonthLabel").textContent = `${year}年${month + 1}月`;
+
+      if (!monthRows.length) {
+        root.innerHTML = `<div class="profit-curve-empty muted">本月暂无每日收益数据。可切换月份，或检查 daily-snapshots.md 是否已写入。</div>`;
+        if (detail) {
+          detail.innerHTML = `
+            <div class="title">${year}年${month + 1}月 收益概览</div>
+            <div class="muted">暂无有效数据点</div>
+          `;
+        }
+        return;
+      }
+
+      const dayCount = monthLastDay(year, month);
+      const width = 640;
+      const height = 236;
+      const pad = { left: 48, right: 16, top: 16, bottom: dayCount > 28 ? 44 : 38 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const absMax = Math.max(1, ...monthRows.map((r) => Math.abs(r.daily_profit)));
+      const yMax = absMax * 1.15;
+      const yMin = -yMax;
+      const yOf = (v) => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+      const zeroY = yOf(0);
+
+      const points = monthRows.map((r) => {
+        const day = Number(r.date.slice(8, 10));
+        return {
+          x: curveXOfDay(day, dayCount, pad.left, plotW),
+          y: yOf(r.daily_profit),
+          value: r.daily_profit,
+          date: r.date,
+          day
+        };
+      });
+
+      const yTicks = [yMax, yMax / 2, 0, -yMax / 2, -yMax];
+      const gridLines = yTicks.map((v) => {
+        const y = yOf(v);
+        const cls = v === 0 ? "curve-zero-line" : "curve-grid-line";
+        return `<line class="${cls}" x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}" />`;
+      }).join("");
+
+      const yLabels = yTicks.map((v) => {
+        const y = yOf(v);
+        const label = v === 0 ? "0" : `${v > 0 ? "+" : ""}${v.toFixed(0)}`;
+        return `<text class="curve-axis-label" x="${pad.left - 6}" y="${y + 3}" text-anchor="end">${label}</text>`;
+      }).join("");
+
+      const xAxis = buildCurveXAxisMarkup(year, month, pad, width, height);
+
+      const areas = curveAreaPaths(points, yOf, zeroY).map((a) => `<path class="${a.cls}" d="${a.d}" />`).join("");
+      const segments = curveSegmentPaths(points, yOf).map((s) => `<path class="${s.cls}" d="${s.d}" />`).join("");
+      const dots = points.map((p) => {
+        const cls = p.value >= 0 ? "curve-dot-up" : "curve-dot-down";
+        return `<circle class="${cls}" cx="${p.x}" cy="${p.y}" r="3.2" />`;
+      }).join("");
+      const hits = points.map((p, i) => `<circle class="curve-hit" data-idx="${i}" cx="${p.x}" cy="${p.y}" r="10" />`).join("");
+
+      root.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${year}年${month + 1}月每日收益曲线">
+          <rect x="0" y="0" width="${width}" height="${height}" fill="#fbfcff" />
+          ${gridLines}
+          <line class="curve-grid-line" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" />
+          <line class="curve-grid-line" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" />
+          ${yLabels}
+          ${xAxis.ticks}
+          ${xAxis.labels}
+          ${xAxis.title}
+          <text class="curve-axis-title" x="10" y="${pad.top + plotH / 2}" text-anchor="middle" transform="rotate(-90 10 ${pad.top + plotH / 2})">收益(元)</text>
+          ${areas}
+          ${segments}
+          ${dots}
+          ${hits}
+        </svg>
+        <div class="curve-tooltip"></div>
+      `;
+      bindCurveTooltip(root, points, width, height);
+
+      const sum = monthRows.reduce((acc, r) => acc + r.daily_profit, 0);
+      const best = monthRows.reduce((a, b) => (b.daily_profit > a.daily_profit ? b : a));
+      const worst = monthRows.reduce((a, b) => (b.daily_profit < a.daily_profit ? b : a));
+      if (detail) {
+        detail.innerHTML = `
+          <div class="title">${year}年${month + 1}月 收益概览</div>
+          <div>有效交易日：${monthRows.length} 天 · 月合计：<span class="${profitClass(sum)}">${formatMoney(sum)}</span></div>
+          <div>最高：<span class="${profitClass(best.daily_profit)}">${esc(best.date.slice(5))} ${formatMoney(best.daily_profit)}</span></div>
+          <div>最低：<span class="${profitClass(worst.daily_profit)}">${esc(worst.date.slice(5))} ${formatMoney(worst.daily_profit)}</span></div>
+        `;
+      }
+    }
+
+    function bindProfitViewTabs(rows) {
+      const list = rows || [];
+      document.querySelectorAll(".profit-view-tab").forEach((btn) => {
+        btn.onclick = () => {
+          const mode = btn.dataset.profitView === "curve" ? "curve" : "calendar";
+          setProfitViewMode(mode);
+          if (mode === "curve") renderProfitCurve(list);
+        };
+      });
+      setProfitViewMode(appState.calView.mode || "calendar");
+    }
+
+    function bindCalendarNav(rows) {
+      const list = rows || [];
+      $("calPrev").onclick = () => {
+        appState.calView.month -= 1;
+        if (appState.calView.month < 0) { appState.calView.month = 11; appState.calView.year -= 1; }
+        refreshProfitMonthViews(list);
+      };
+      $("calNext").onclick = () => {
+        appState.calView.month += 1;
+        if (appState.calView.month > 11) { appState.calView.month = 0; appState.calView.year += 1; }
+        refreshProfitMonthViews(list);
+      };
+    }
+
+    function renderHome(parsed) {
+      const p = parsed.portfolio || {};
+      const d = parsed.discipline || {};
+      const q = parsed.qa || {};
+
+      const snapshotRows = parsed.dailySnapshots?.rows || [];
+      const kpi = pickKpiData(p, parsed.dailySnapshots || { latest: null });
+
+      $("kpiTotal").textContent = formatMoney(kpi.total);
+      $("kpiDaily").textContent = formatMoney(kpi.todayProfit);
+      $("kpiDaily").className = "value " + profitClass(kpi.todayProfit);
+      $("kpiDailySub").textContent = kpi.todayProfit != null ? "养基宝口径（支付宝待更新）" : "待更新";
+      $("kpiYesterday").textContent = formatMoney(kpi.yesterdayProfit);
+      $("kpiYesterday").className = "value " + profitClass(kpi.yesterdayProfit);
+      $("kpiYesterdaySub").textContent = kpi.yesterdayProfit != null ? "养基宝口径（前一日）" : "待更新";
+      $("kpiHolding").textContent = formatMoney(kpi.holdingProfit);
+      $("kpiAccum").textContent = formatMoney(kpi.accumProfit);
+      $("kpiHolding").className = "value " + profitClass(kpi.holdingProfit);
+      $("kpiAccum").className = "value " + profitClass(kpi.accumProfit);
+      $("kpiSourceNote").textContent = kpi.sourceNote;
+      const groups = p.groups || [];
+      const defense = groups.find(g => g.name.includes("防守"));
+      $("kpiDefense").textContent = defense ? defense.ratio : "—";
+      $("kpiDefense").className = "value " + ((parsePercent(defense?.ratio) || 0) < 15 ? "warn" : "good");
+
+      const riskRows = [];
+      const tech = groups.find(g => /半导体|科技链/.test(g.name || "") && !/纳指/.test(g.name || ""));
+      const techVal = parsePercent(tech?.ratio);
+      riskRows.push(row("科技链占比", tech?.ratio || "--", "≤30%", techVal > 30 ? "超限" : "正常", techVal > 30 ? "bad" : "good"));
+      const defenseVal = parsePercent(defense?.ratio);
+      riskRows.push(row("防守资产占比", defense?.ratio || "--", "≥15%", defenseVal < 15 ? "偏低" : "正常", defenseVal < 15 ? "warn" : "good"));
+      riskRows.push(row("纳指重复只数", "3只", "≤2只", "重复", "warn"));
+      riskRows.push(row("红利低波重复只数", "3只", "≤2只", "重复", "warn"));
+      $("riskRows").innerHTML = riskRows.join("");
+
+      renderWeeklyBrief(q);
+
+      const actions = buildActions(p);
+      $("actionList").innerHTML = actions.map(actionTpl).join("");
+      const candidates = buildCandidatePool(p, d);
+      $("candidateList").innerHTML = candidates.map(candidateTpl).join("");
+
+      renderTodos(p.todo || []);
+      renderProfitCalendar(snapshotRows);
+      renderProfitCurve(snapshotRows);
+      bindCalendarNav(snapshotRows);
+      bindProfitViewTabs(snapshotRows);
+    }
+
+    function getWeeklyReports(qa) {
+      return qa.weeklyReports && qa.weeklyReports.length
+        ? qa.weeklyReports
+        : [{
+          date: "最新",
+          summary: qa.latestEnv || "暂无简报，请先执行 /fund-lab 环境。",
+          full: qa.latestEnv || "暂无可展示内容。"
+        }];
+    }
+
+    function pickBriefTitle(report) {
+      const raw = cleanMd((report.summary || report.full || "").split("\n").find(l => l.trim()) || "");
+      return raw.slice(0, 48) || "环境简报";
+    }
+
+    function showReportDetail(report) {
+      $("reportTitle").textContent = `${report.date}｜基金市场周报`;
+      $("reportContent").innerHTML = markdownToHtml(report.full || report.summary || "暂无详情");
+    }
+
+    function showReportWelcome(reports) {
+      $("reportTitle").textContent = "基金市场周报";
+      const count = reports.length;
+      const latest = reports[0];
+      $("reportContent").innerHTML = `
+        <div class="report-welcome">
+          <p><strong>共 ${count} 篇存档</strong></p>
+          <p class="muted">每周市场环境摘要，由 <code>/fund-lab 环境</code> 生成后写入 <code>assets/weekly-briefs/</code>。</p>
+          <p class="muted">← 从左侧选择日期阅读完整周报；或在首页点击摘要卡片直达该篇。</p>
+          ${latest && latest.date !== "最新" ? `<p class="muted" style="margin-top:12px;">最近更新：<strong>${esc(latest.date)}</strong> · ${esc(pickBriefTitle(latest))}</p>` : ""}
+        </div>`;
+    }
+
+    function highlightReportInList(date) {
+      [...$("reportArchiveList").querySelectorAll(".timeline-item[data-ridx]")].forEach((node) => {
+        node.classList.toggle("active", node.dataset.date === date);
+      });
+    }
+
+    function selectReport(report, reports) {
+      appState.reportSelected = report;
+      showReportDetail(report);
+      highlightReportInList(report.date);
+    }
+
+    function renderReportPanel(qa, opts = {}) {
+      const reports = getWeeklyReports(qa);
+      const listEl = $("reportArchiveList");
+      let selected = null;
+
+      if (opts.report) {
+        selected = reports.find(r => r.date === opts.report.date) || opts.report;
+      } else if (opts.preserve && appState.reportSelected) {
+        selected = reports.find(r => r.date === appState.reportSelected.date) || null;
+      } else if (!opts.fromNav && appState.reportSelected) {
+        selected = reports.find(r => r.date === appState.reportSelected.date) || reports[0];
+      } else if (opts.fromNav && appState.reportSelected) {
+        selected = reports.find(r => r.date === appState.reportSelected.date) || null;
+      }
+
+      if (selected) appState.reportSelected = selected;
+
+      if (!reports.length || (reports.length === 1 && reports[0].date === "最新" && !reports[0].full)) {
+        listEl.innerHTML = `<div class="timeline-item">暂无周报存档</div>`;
+        $("reportTitle").textContent = "基金市场周报";
+        $("reportContent").innerHTML = `<div class="report-welcome"><p class="muted">暂无周报。请在 Cursor 执行 <code>/fund-lab 环境</code> 生成后刷新看板。</p></div>`;
+        return;
+      }
+
+      listEl.innerHTML = reports.map((r, idx) => `
+        <div class="timeline-item${selected && r.date === selected.date ? " active" : ""}" data-ridx="${idx}" data-date="${esc(r.date)}">
+          <div class="timeline-date">${esc(r.date)}</div>
+          <div class="timeline-title">${esc(pickBriefTitle(r))}</div>
+        </div>
+      `).join("");
+
+      [...listEl.querySelectorAll(".timeline-item[data-ridx]")].forEach((node) => {
+        node.onclick = () => selectReport(reports[Number(node.dataset.ridx)], reports);
+      });
+
+      if (selected) showReportDetail(selected);
+      else showReportWelcome(reports);
+    }
+
+    function renderWeeklyBrief(qa) {
+      const listEl = $("weeklyBriefList");
+      const reports = getWeeklyReports(qa);
+      listEl.innerHTML = reports.map((r, idx) => `
+        <article class="brief-item" data-idx="${idx}">
+          <div class="brief-date">${esc(r.date)}</div>
+          <div class="brief-summary">${markdownToHtml(r.summary || "")}</div>
+        </article>
+      `).join("");
+      [...listEl.querySelectorAll(".brief-item")].forEach((node) => {
+        node.onclick = () => openReportPage(reports[Number(node.dataset.idx)]);
+      });
+    }
+
+    function openReportPage(report) {
+      appState.reportSelected = report;
+      if (appState.parsed?.qa) renderReportPanel(appState.parsed.qa, { report });
+      switchTab("report");
+    }
+
+    function formatInlineMarkdown(raw) {
+      let text = esc(raw || "");
+      text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+      text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      return text;
+    }
+
+    function splitTableRow(line) {
+      return String(line || "").trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(s => s.trim());
+    }
+
+    function isTableSeparator(line) {
+      const cells = splitTableRow(line);
+      return cells.length > 0 && cells.every(c => /^:?-{3,}:?$/.test(c));
+    }
+
+    function isTableRow(line) {
+      const trimmed = String(line || "").trim();
+      return trimmed.includes("|") && !trimmed.startsWith("```");
+    }
+
+    function tableAlignFromSep(cell) {
+      const t = String(cell || "").trim();
+      if (t.startsWith(":") && t.endsWith(":")) return "center";
+      if (t.endsWith(":")) return "right";
+      return "left";
+    }
+
+    function renderMarkdownTable(headerLine, separatorLine, bodyLines) {
+      const headerCells = splitTableRow(headerLine);
+      const aligns = splitTableRow(separatorLine).map(tableAlignFromSep);
+      const parts = ['<table class="md-table"><thead><tr>'];
+      headerCells.forEach((cell, colIdx) => {
+        const align = aligns[colIdx] || "left";
+        parts.push(`<th style="text-align:${align}">${formatInlineMarkdown(cell)}</th>`);
+      });
+      parts.push("</tr></thead><tbody>");
+      bodyLines.forEach((bodyLine) => {
+        const cells = splitTableRow(bodyLine);
+        parts.push("<tr>");
+        cells.forEach((cell, colIdx) => {
+          const align = aligns[colIdx] || "left";
+          parts.push(`<td style="text-align:${align}">${formatInlineMarkdown(cell)}</td>`);
+        });
+        parts.push("</tr>");
+      });
+      parts.push("</tbody></table>");
+      return parts.join("");
+    }
+
+    function markdownToHtml(md) {
+      const src = String(md || "").replace(/\r\n/g, "\n");
+      const lines = src.split("\n");
+      const out = [];
+      let inUl = false;
+      let inOl = false;
+      let i = 0;
+
+      const closeLists = () => {
+        if (inUl) {
+          out.push("</ul>");
+          inUl = false;
+        }
+        if (inOl) {
+          out.push("</ol>");
+          inOl = false;
+        }
+      };
+
+      while (i < lines.length) {
+        const lineRaw = lines[i];
+        const line = lineRaw.trim();
+        if (!line) {
+          closeLists();
+          i += 1;
+          continue;
+        }
+        if (line.startsWith("```")) {
+          closeLists();
+          i += 1;
+          const codeLines = [];
+          while (i < lines.length && !lines[i].trim().startsWith("```")) {
+            codeLines.push(lines[i]);
+            i += 1;
+          }
+          if (i < lines.length) i += 1;
+          out.push(`<pre><code>${esc(codeLines.join("\n"))}</code></pre>`);
+          continue;
+        }
+        if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1].trim())) {
+          closeLists();
+          const headerLine = line;
+          const separatorLine = lines[i + 1].trim();
+          i += 2;
+          const bodyLines = [];
+          while (i < lines.length) {
+            const rowLine = lines[i].trim();
+            if (!isTableRow(rowLine) || isTableSeparator(rowLine)) break;
+            bodyLines.push(rowLine);
+            i += 1;
+          }
+          out.push(renderMarkdownTable(headerLine, separatorLine, bodyLines));
+          continue;
+        }
+        if (/^(-{3,}|\*{3,}|_{3,})$/.test(line)) {
+          closeLists();
+          out.push("<hr>");
+          i += 1;
+          continue;
+        }
+        if (line.startsWith(">")) {
+          closeLists();
+          const quoteLines = [];
+          while (i < lines.length && lines[i].trim().startsWith(">")) {
+            quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+            i += 1;
+          }
+          out.push(`<blockquote>${quoteLines.map(q => `<p>${formatInlineMarkdown(q)}</p>`).join("")}</blockquote>`);
+          continue;
+        }
+        if (/^####\s+/.test(line)) {
+          closeLists();
+          out.push(`<h4>${formatInlineMarkdown(line.replace(/^####\s+/, ""))}</h4>`);
+          i += 1;
+          continue;
+        }
+        if (/^###\s+/.test(line)) {
+          closeLists();
+          out.push(`<h3>${formatInlineMarkdown(line.replace(/^###\s+/, ""))}</h3>`);
+          i += 1;
+          continue;
+        }
+        if (/^##\s+/.test(line)) {
+          closeLists();
+          out.push(`<h2>${formatInlineMarkdown(line.replace(/^##\s+/, ""))}</h2>`);
+          i += 1;
+          continue;
+        }
+        if (/^#\s+/.test(line)) {
+          closeLists();
+          out.push(`<h1>${formatInlineMarkdown(line.replace(/^#\s+/, ""))}</h1>`);
+          i += 1;
+          continue;
+        }
+        if (/^[-*]\s+/.test(line)) {
+          if (!inUl) {
+            if (inOl) {
+              out.push("</ol>");
+              inOl = false;
+            }
+            out.push("<ul>");
+            inUl = true;
+          }
+          out.push(`<li>${formatInlineMarkdown(line.replace(/^[-*]\s+/, ""))}</li>`);
+          i += 1;
+          continue;
+        }
+        if (/^\d+[.)]\s+/.test(line)) {
+          if (!inOl) {
+            if (inUl) {
+              out.push("</ul>");
+              inUl = false;
+            }
+            out.push("<ol>");
+            inOl = true;
+          }
+          out.push(`<li>${formatInlineMarkdown(line.replace(/^\d+[.)]\s+/, ""))}</li>`);
+          i += 1;
+          continue;
+        }
+        closeLists();
+        out.push(`<p>${formatInlineMarkdown(line)}</p>`);
+        i += 1;
+      }
+      closeLists();
+      return out.join("");
+    }
+
+    function switchTab(key) {
+      document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+      const btn = [...document.querySelectorAll(".tab-btn")].find(b => b.dataset.tab === key);
+      if (btn) btn.classList.add("active");
+      const panel = $("panel-" + key);
+      if (panel) panel.classList.add("active");
+    }
+
+    function row(name, now, target, status, cls) {
+      return `<tr><td>${esc(name)}</td><td>${esc(now)}</td><td>${esc(target)}</td><td class="${cls}"><b>${esc(status)}</b></td></tr>`;
+    }
+
+    function buildActions(p) {
+      const out = [];
+      (p.todo || []).forEach(t => {
+        out.push({
+          type: "execute",
+          title: `${t.batch}：转出 ${t.amount}`,
+          tags: ["执行", "转换"],
+          detail: `日期 ${t.date}。按既定比例转入宽基40% / 中短债30% / 黄金15% / 现金15%。${t.split ? ` 约等于：${t.split}。` : ""}`,
+          reason: t.reason
+        });
+      });
+      out.push({
+        type: "watch",
+        title: "观察：天弘纳指暂停申购状态",
+        tags: ["观察", "定投"],
+        detail: "当前天弘纳指有定投计划但暂停申购，持续关注恢复时间。",
+        reason: "避免误判为执行失败。"
+      });
+      out.push({
+        type: "learn",
+        title: "学习：每周环境 + 缺口分析",
+        tags: ["学习"],
+        detail: "每周看一次环境简报，并判断“补缺口”还是“追高”。",
+        reason: "从止血走向长期赚钱。"
+      });
+      return out;
+    }
+
+    function actionTpl(a) {
+      const typeCls = a.type === "execute" ? "" : a.type;
+      return `
+        <div class="action-item">
+          <div class="action-title">${esc(a.title)}</div>
+          <div>${markdownToHtml(a.detail || "")}</div>
+          <div class="muted">原因：${markdownToHtml(a.reason || "—")}</div>
+          <div class="chips">${(a.tags || []).map(t => `<span class="chip ${typeCls}">${esc(t)}</span>`).join("")}</div>
+        </div>
+      `;
+    }
+
+    function buildCandidatePool(p, d) {
+      const pool = p.candidatePool && p.candidatePool.length ? p.candidatePool : [];
+      if (pool.length) {
+        return pool.map((c) => {
+          const passed = [c.gapFill, c.discipline, c.feeLiquidity, c.cashConflict].filter(Boolean).length;
+          return {
+            direction: c.direction,
+            gates: [
+              { name: "补当前缺口", ok: !!c.gapFill },
+              { name: "触发纪律卡校验", ok: !!c.discipline },
+              { name: "费率/流动性可接受", ok: !!c.feeLiquidity },
+              { name: "不冲突短期用钱", ok: !!c.cashConflict }
+            ],
+            status: passed === 4 ? "可执行建议" : "仅保留候选池",
+            note: c.note || ""
+          };
+        });
+      }
+
+      const groups = p.groups || [];
+      const techRatio = parsePercent((groups.find(g => /科技链|半导体/.test(g.name || "")) || {}).ratio || "0%");
+      const defenseRatio = parsePercent((groups.find(g => /防守/.test(g.name || "")) || {}).ratio || "0%");
+      const hasTechWarn = techRatio > 30 || !!d.hasTechLimitWarn;
+      const needDefense = defenseRatio < 15 || !!d.hasDefenseWarn;
+      return [
+        {
+          direction: "宽基",
+          gates: [
+            { name: "补当前缺口", ok: hasTechWarn },
+            { name: "触发纪律卡校验", ok: true },
+            { name: "费率/流动性可接受", ok: true },
+            { name: "不冲突短期用钱", ok: true }
+          ],
+          status: hasTechWarn ? "可执行建议" : "仅保留候选池",
+          note: "优先用于降低重复暴露。"
+        },
+        {
+          direction: "防守（中短债/黄金）",
+          gates: [
+            { name: "补当前缺口", ok: needDefense },
+            { name: "触发纪律卡校验", ok: true },
+            { name: "费率/流动性可接受", ok: true },
+            { name: "不冲突短期用钱", ok: true }
+          ],
+          status: needDefense ? "可执行建议" : "仅保留候选池",
+          note: "当前防守占比不足 15% 时优先提升。"
+        },
+        {
+          direction: "科技子赛道新增",
+          gates: [
+            { name: "补当前缺口", ok: false },
+            { name: "触发纪律卡校验", ok: false },
+            { name: "费率/流动性可接受", ok: true },
+            { name: "不冲突短期用钱", ok: true }
+          ],
+          status: "仅保留候选池",
+          note: "当前高相关，不满足准入。"
+        }
+      ];
+    }
+
+    function candidateTpl(c) {
+      const passed = c.gates.filter(g => g.ok).length;
+      const gateText = c.gates.map((g) => `${g.ok ? "✓" : "✕"} ${g.name}`).join(" / ");
+      const statusClass = passed === 4 ? "good" : "warn";
+      return `
+        <div class="action-item">
+          <div class="action-title">${esc(c.direction)}</div>
+          <div class="muted">四门槛：${esc(gateText)}</div>
+          <div class="${statusClass}" style="font-weight:700;margin-top:4px;">${esc(c.status)}</div>
+          <div class="muted">${esc(c.note || "")}</div>
+        </div>
+      `;
+    }
+
+    function renderHub(parsed) {
+      const q = parsed.qa || { sections: [] };
+      const hidden = new Set(getHiddenQAIds());
+      const timeline = $("qaTimeline");
+      timeline.innerHTML = "";
+      const visible = (q.sections || []).filter((sec) => !hidden.has(qaItemId(sec)));
+      if (!visible.length) {
+        timeline.innerHTML = `<div class="knowledge-item"><div><div class="knowledge-item-date">—</div><div class="knowledge-item-title">暂无知识条目，和 AI 对话后会自动沉淀到这里。</div></div></div>`;
+      } else {
+        visible.forEach((sec) => {
+          const id = qaItemId(sec);
+          const item = document.createElement("div");
+          item.className = "knowledge-item";
+          item.innerHTML = `
+            <div>
+              <div class="knowledge-item-date">${esc(sec.date || "未标注")}</div>
+              <div class="knowledge-item-title">${esc(sec.title)}</div>
+            </div>
+            <button type="button" class="knowledge-item-del" title="从看板隐藏" aria-label="删除">×</button>
+          `;
+          item.querySelector(".knowledge-item-del").onclick = (e) => {
+            e.stopPropagation();
+            hideQAItem(id);
+            renderHub(parsed);
+          };
+          item.onclick = (e) => {
+            if (e.target.closest(".knowledge-item-del")) return;
+            openHubDoc(`QA｜${sec.title}`, sec.body || "");
+          };
+          timeline.appendChild(item);
+        });
+      }
+      renderResearchHub(parsed.researchReports || []);
+      renderGlossaryHub(parsed.glossaryTerms || []);
+      renderReviewJournalHub(parsed.reviewJournal || []);
+      renderDisciplineHub(parsed.discipline || {});
+      ensureMoodPicker();
+      bindMoodCalendarNav(parsed.reviewJournal || []);
+      renderMoodCalendar(parsed.reviewJournal || []);
+      bindGlossaryModalEvents();
+    }
+
+    function openHubDoc(title, body, jump = true) {
+      appState.activeJournalDocEntry = null;
+      const moodBox = $("journalDocMood");
+      if (moodBox) moodBox.hidden = true;
+      $("hubDocTitle").textContent = title || "知识条目";
+      $("hubDocContent").innerHTML = markdownToHtml(body || "暂无详情");
+      if (jump) switchTab("hubdoc");
+    }
+
+    function renderResearchHub(reports) {
+      const root = $("researchTimeline");
+      if (!reports.length) {
+        root.innerHTML = `<div class="timeline-item">暂无穿透研究条目</div>`;
+        return;
+      }
+      root.innerHTML = reports.map((r, idx) => `
+        <div class="timeline-item" data-idx="${idx}">
+          <div class="timeline-date">${esc(r.date || "未标注")}</div>
+          <div class="timeline-title">${esc(r.title || "未命名研究")}</div>
+        </div>
+      `).join("");
+      [...root.querySelectorAll(".timeline-item[data-idx]")].forEach((node) => {
+        node.onclick = () => {
+          const report = reports[Number(node.dataset.idx)];
+          openHubDoc(`研究｜${report.title || "未命名研究"}`, report.body || "暂无详情");
+        };
+      });
+    }
+
+    function renderGlossaryHub(terms) {
+      const root = $("glossaryGrid");
+      const searchEl = $("glossarySearch");
+      if (!root) return;
+      const all = terms || [];
+      const q = (searchEl?.value || "").trim().toLowerCase();
+      const filtered = q
+        ? all.filter((t) => t.term.toLowerCase().includes(q) || t.definition.toLowerCase().includes(q) || t.category.toLowerCase().includes(q))
+        : all;
+      if (!filtered.length) {
+        root.innerHTML = `<div class="muted" style="grid-column:1/-1;padding:12px;">暂无术语。请创建 assets/personal-glossary.md，或导入 references/fund-glossary.md。</div>`;
+        return;
+      }
+      root.innerHTML = filtered.map((term, idx) => `
+        <button type="button" class="term-card" data-tidx="${idx}" aria-label="${esc(term.term)}">
+          <div class="term-card-inner">
+            <div class="term-card-face term-card-front">${esc(term.term)}</div>
+            <div class="term-card-face term-card-back">${esc(glossaryTermPreview(term.definition))}</div>
+          </div>
+        </button>
+      `).join("");
+      root._glossaryTerms = filtered;
+      [...root.querySelectorAll(".term-card[data-tidx]")].forEach((btn) => {
+        btn.onclick = () => {
+          const term = root._glossaryTerms[Number(btn.dataset.tidx)];
+          openGlossaryModal(term);
+        };
+      });
+      if (searchEl && !searchEl.dataset.bound) {
+        searchEl.dataset.bound = "1";
+        searchEl.oninput = () => renderGlossaryHub(all);
+      }
+    }
+
+    function renderReviewJournalHub(entries) {
+      const root = $("reviewJournalTimeline");
+      if (!entries.length) {
+        root.innerHTML = `<div class="journal-item"><div class="journal-item-main"><div class="journal-item-date">—</div><div class="journal-item-title">暂无复盘记录。可在下方手写，或由 /fund-lab 复盘 后刷新。</div></div></div>`;
+        return;
+      }
+      root.innerHTML = entries.map((e, idx) => `
+        <div class="journal-item" data-ridx="${idx}">
+          <button type="button" class="journal-mood-btn" data-ridx="${idx}" title="${e.mood ? "修改心情" : "补心情"}">${e.mood ? e.mood.emoji : "📝"}</button>
+          <div class="journal-item-main">
+            <div class="journal-item-date">${esc(e.date || e.month || "—")}${e.mood ? ` · ${esc(e.mood.label)}` : ""}</div>
+            <div class="journal-item-title">${esc(e.title || "复盘")}</div>
+          </div>
+          ${e.mood ? "" : `<span class="journal-mood-hint">补心情</span>`}
+        </div>
+      `).join("");
+      root._journalEntries = entries;
+      [...root.querySelectorAll(".journal-mood-btn")].forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const entry = root._journalEntries[Number(btn.dataset.ridx)];
+          openJournalMoodPopover(entry, btn);
+        };
+      });
+      [...root.querySelectorAll(".journal-item[data-ridx]")].forEach((node) => {
+        node.onclick = (e) => {
+          if (e.target.closest(".journal-mood-btn")) return;
+          const entry = root._journalEntries[Number(node.dataset.ridx)];
+          openJournalDoc(entry);
+        };
+      });
+      bindJournalMoodPopoverGlobal();
+    }
+
+    function renderDisciplineHub(discipline) {
+      const root = $("disciplineGrid");
+      const cards = discipline.cards || [];
+      const full = discipline.full || "暂无纪律规则，请先导入 assets/discipline-rules.md";
+      if (!cards.length) {
+        root.innerHTML = `
+          <div class="discipline-card">
+            <div class="discipline-card-head default">纪律守则</div>
+            <div class="discipline-card-body muted">暂无规则卡，请先导入 assets/discipline-rules.md</div>
+          </div>
+        `;
+        return;
+      }
+      root.innerHTML = cards.map((card) => `
+        <div class="discipline-card">
+          <div class="discipline-card-head ${disciplineCardClass(card.title)}">${esc(card.title)}</div>
+          <div class="discipline-card-body">${markdownToHtml(card.body)}</div>
+        </div>
+      `).join("") + `
+        <div style="margin-top:4px;">
+          <button type="button" class="btn ghost" id="btnDisciplineFull">查看完整原文</button>
+        </div>
+      `;
+      $("btnDisciplineFull")?.addEventListener("click", () => {
+        openHubDoc("纪律守则｜discipline-rules.md", full);
+      });
+    }
+
+    function renderTodos(todoItems) {
+      const root = $("todoList");
+      const state = JSON.parse(localStorage.getItem(TODO_STATE_KEY) || "{}");
+      const rows = todoItems.map((t, idx) => {
+        const id = `${t.batch}-${t.date}-${idx}`;
+        const done = !!state[id];
+        let text;
+        if (t.planned && t.actual) {
+          const statusPart = t.status ? ` 【${t.status}】` : "";
+          text = `${t.batch}：原计划 ${t.planned}；实际 ${t.actual}${statusPart}`;
+        } else if (t.batch === "下一步") {
+          text = `📌 ${t.actual || t.amount}`;
+        } else {
+          text = `${t.batch}：${t.date} 转 ${t.amount}（${t.reason}）`
+            + (t.split ? `；分配：${t.split}` : "");
+        }
+        return { id, done, text };
+      });
+      rows.sort((a, b) => Number(a.done) - Number(b.done));
+      if (!rows.length) rows.push({ id: "none", done: false, text: "暂无待办。", disabled: true });
+      root.innerHTML = rows.map(r => `
+        <div class="todo-row ${r.done ? "done" : ""}">
+          <input type="checkbox" ${r.done ? "checked" : ""} ${r.disabled ? "disabled" : ""} data-id="${esc(r.id)}" />
+          <label>${markdownToHtml(r.text || "")}</label>
+        </div>
+      `).join("");
+      [...root.querySelectorAll("input[type='checkbox'][data-id]")].forEach(box => {
+        box.onchange = () => {
+          const map = JSON.parse(localStorage.getItem(TODO_STATE_KEY) || "{}");
+          map[box.dataset.id] = box.checked;
+          localStorage.setItem(TODO_STATE_KEY, JSON.stringify(map));
+          renderTodos(todoItems);
+        };
+      });
+    }
+
+    function applyOverrides(parsed) {
+      const ov = appState.manualOverride || {};
+      if (ov.kpi?.total) parsed.portfolio.totals.total = Number(ov.kpi.total);
+      if (ov.notes) parsed.qa.latestEnv = (parsed.qa.latestEnv || "") + "\n\n[手动注释]\n" + ov.notes;
+      return parsed;
+    }
+
+    function refreshUI() {
+      if (!appState.parsed.portfolio) return;
+      const parsed = JSON.parse(JSON.stringify(appState.parsed));
+      applyOverrides(parsed);
+      renderHome(parsed);
+      renderHub(parsed);
+      if ($("reportTabBtn")?.classList.contains("active")) {
+        renderReportPanel(parsed.qa, { preserve: true });
+      }
+      $("lastRefreshLabel").textContent = "最近刷新：" + new Date().toLocaleString("zh-CN");
+    }
+
+    async function readFileHandleText(dirHandle, relativePath) {
+      const parts = relativePath.split("/");
+      let current = dirHandle;
+      for (let i = 0; i < parts.length - 1; i++) current = await current.getDirectoryHandle(parts[i]);
+      const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
+      const file = await fileHandle.getFile();
+      return { text: await file.text(), updated: new Date(file.lastModified).toLocaleString("zh-CN") };
+    }
+
+    async function readFundResearchDirectory(dirHandle) {
+      try {
+        const parts = FUND_RESEARCH_DIR.split("/");
+        let current = dirHandle;
+        for (const p of parts) current = await current.getDirectoryHandle(p);
+        const out = [];
+        for await (const [name, handle] of current.entries()) {
+          if (handle.kind !== "file" || !name.endsWith(".md")) continue;
+          const file = await handle.getFile();
+          out.push({
+            name,
+            text: await file.text(),
+            updated: new Date(file.lastModified).toLocaleString("zh-CN")
+          });
+        }
+        return out;
+      } catch (err) {
+        return [];
+      }
+    }
+
+    async function readWeeklyBriefDirectory(dirHandle) {
+      const parts = WEEKLY_BRIEFS_DIR.split("/");
+      let current = dirHandle;
+      for (const p of parts) current = await current.getDirectoryHandle(p);
+      const out = [];
+      for await (const [name, handle] of current.entries()) {
+        if (handle.kind !== "file" || !name.endsWith(".md")) continue;
+        const file = await handle.getFile();
+        out.push({
+          name,
+          text: await file.text(),
+          updated: new Date(file.lastModified).toLocaleString("zh-CN")
+        });
+      }
+      return out;
+    }
+
+    async function readReviewJournalDirectory(dirHandle) {
+      try {
+        const parts = REVIEW_JOURNAL_DIR.split("/");
+        let current = dirHandle;
+        for (const p of parts) current = await current.getDirectoryHandle(p);
+        const out = [];
+        for await (const [name, handle] of current.entries()) {
+          if (handle.kind !== "file" || !name.endsWith(".md")) continue;
+          const file = await handle.getFile();
+          out.push({
+            name,
+            text: await file.text(),
+            updated: new Date(file.lastModified).toLocaleString("zh-CN")
+          });
+        }
+        return out.sort((a, b) => b.name.localeCompare(a.name));
+      } catch (err) {
+        return [];
+      }
+    }
+
+    async function writeFileHandleText(dirHandle, relativePath, content) {
+      const parts = relativePath.split("/");
+      let current = dirHandle;
+      for (let i = 0; i < parts.length - 1; i++) {
+        current = await current.getDirectoryHandle(parts[i], { create: true });
+      }
+      const fileHandle = await current.getFileHandle(parts[parts.length - 1], { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+    }
+
+    async function ensureDirWritePermission() {
+      if (!appState.dirHandle) return false;
+      let perm = await appState.dirHandle.queryPermission({ mode: "readwrite" });
+      if (perm === "prompt") perm = await appState.dirHandle.requestPermission({ mode: "readwrite" });
+      return perm === "granted";
+    }
+
+    async function appendReviewJournalEntry(date, title, body, mood) {
+      if (!appState.dirHandle) throw new Error("未授权项目目录");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("日期格式须为 YYYY-MM-DD");
+      const ok = await ensureDirWritePermission();
+      if (!ok) throw new Error("需要目录写入权限");
+      const rel = `${REVIEW_JOURNAL_DIR}/${date}.md`;
+      let existing = "";
+      try {
+        const read = await readFileHandleText(appState.dirHandle, rel);
+        existing = read.text;
+      } catch (err) {
+        existing = "";
+      }
+      const sectionTitle = title?.trim() || "复盘手记";
+      const moodLine = mood?.label ? `> 心情：${mood.label} ${mood.emoji || ""}\n\n` : "";
+      const block = `## ${sectionTitle}\n\n${moodLine}${String(body || "").trim()}\n\n---\n`;
+      let content;
+      if (existing.trim()) {
+        content = `${existing.trim()}\n\n${block}`;
+      } else {
+        content = `# 复盘 · ${date}\n\n> 由看板或 /fund-lab 复盘 维护。\n\n${block}`;
+      }
+      await writeFileHandleText(appState.dirHandle, rel, content);
+      return rel;
+    }
+
+    function fileSummary(text) {
+      return text.split(/\r?\n/).find(l => l.trim() && !l.startsWith("#"))?.slice(0, 60) || "已加载";
+    }
+
+    function openHandleDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DIR_HANDLE_DB, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(DIR_HANDLE_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveDirHandle(handle) {
+      const db = await openHandleDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(DIR_HANDLE_STORE, "readwrite");
+        tx.objectStore(DIR_HANDLE_STORE).put(handle, DIR_HANDLE_KEY);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function loadSavedDirHandle() {
+      const db = await openHandleDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(DIR_HANDLE_STORE, "readonly");
+        const req = tx.objectStore(DIR_HANDLE_STORE).get(DIR_HANDLE_KEY);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function restoreDirectoryAccess() {
+      if (!window.showDirectoryPicker) return false;
+      const handle = await loadSavedDirHandle();
+      if (!handle) return false;
+      let perm = await handle.queryPermission({ mode: "readwrite" });
+      if (perm === "prompt") perm = await handle.requestPermission({ mode: "readwrite" });
+      if (perm !== "granted") {
+        perm = await handle.queryPermission({ mode: "read" });
+        if (perm === "prompt") perm = await handle.requestPermission({ mode: "read" });
+      }
+      if (perm !== "granted") return false;
+      appState.dirHandle = handle;
+      return true;
+    }
+
+    async function loadFromDirectory() {
+      if (!appState.dirHandle) return;
+      const fileMap = {};
+      const missingOptional = [];
+      const missingRequired = [];
+      try {
+        for (const [key, path] of Object.entries(DEFAULT_PATHS)) {
+          try {
+            const { text, updated } = await readFileHandleText(appState.dirHandle, path);
+            fileMap[key] = text;
+            if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
+            appState.parsed.filesMeta[key] = { updated, summary: fileSummary(text) };
+          } catch (err) {
+            const optional = key === "dailySnapshots" || key === "glossary" || key === "personalGlossary";
+            if (optional) missingOptional.push(path);
+            else missingRequired.push(path);
+          }
+        }
+        try {
+          const dirReports = await readWeeklyBriefDirectory(appState.dirHandle);
+          fileMap.weeklyBriefDirReports = dirReports;
+          if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
+          appState.parsed.filesMeta.weeklyBriefDir = {
+            updated: new Date().toLocaleString("zh-CN"),
+            summary: `周报目录 ${dirReports.length} 条`
+          };
+        } catch (err) {
+          missingOptional.push(`${WEEKLY_BRIEFS_DIR}/*.md`);
+        }
+        const reviewDirReports = await readReviewJournalDirectory(appState.dirHandle);
+        fileMap.reviewJournalDirReports = reviewDirReports;
+        if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
+        appState.parsed.filesMeta.reviewJournalDir = {
+          updated: new Date().toLocaleString("zh-CN"),
+          summary: `复盘目录 ${reviewDirReports.length} 篇`
+        };
+        try {
+          const fundResearchReports = await readFundResearchDirectory(appState.dirHandle);
+          fileMap.fundResearchDirReports = fundResearchReports;
+          if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
+          appState.parsed.filesMeta.fundResearchDir = {
+            updated: new Date().toLocaleString("zh-CN"),
+            summary: `穿透研究 ${fundResearchReports.length} 篇`
+          };
+        } catch (err) {
+          missingOptional.push(`${FUND_RESEARCH_DIR}/*.md`);
+        }
+        if (missingRequired.length) {
+          throw new Error(`缺少必需文件：${missingRequired.join("、")}`);
+        }
+        appState.files = fileMap;
+        parseAll();
+        $("autoStatus").textContent = missingOptional.length
+          ? `目录读取成功（部分可选文件缺失）：${missingOptional.join("、")}`
+          : "目录读取成功：已载入核心文件，支持自动轮询刷新。";
+      } catch (e) {
+        $("autoStatus").textContent = "目录读取失败：" + e.message;
+      }
+    }
+
+    function parseAll() {
+      appState.parsed.portfolio = parsePortfolio(appState.files.portfolio || "");
+      appState.parsed.qa = parseQALog(appState.files.qa || "");
+      appState.parsed.weeklyFromFile = parseWeeklyBriefs(appState.files.weeklyBriefs || "");
+      appState.parsed.weeklyFromDir = parseWeeklyBriefsFromDirectory(appState.files.weeklyBriefDirReports || []);
+      appState.parsed.dailySnapshots = parseDailySnapshots(appState.files.dailySnapshots || "");
+      appState.parsed.discipline = parseDiscipline(appState.files.discipline || "");
+      appState.parsed.researchReports = parseResearchReports(
+        appState.files.portfolio || "",
+        appState.files.fundResearchDirReports || []
+      );
+      const reviewFromDir = parseReviewJournalFromDirectory(appState.files.reviewJournalDirReports || []);
+      const reviewLegacy = parseReviewJournalLegacy(appState.files.review || "");
+      appState.parsed.reviewJournal = mergeReviewJournalEntries(reviewFromDir, reviewLegacy);
+      appState.parsed.glossaryTerms = mergeGlossaryTerms(
+        appState.files.glossary || "",
+        appState.files.personalGlossary || ""
+      );
+      mergeEmbeddedFallbacks();
+      persistState();
+      refreshUI();
+    }
+
+    function mergeEmbeddedFallbacks() {
+      const embedded = EMBEDDED_BOOTSTRAP.parsed;
+      const weeklyFromDir = appState.parsed.weeklyFromDir || [];
+      const weeklyFromFile = appState.parsed.weeklyFromFile || [];
+      if (weeklyFromDir.length) {
+        appState.parsed.qa.weeklyReports = weeklyFromDir;
+      } else if (weeklyFromFile.length) {
+        appState.parsed.qa.weeklyReports = weeklyFromFile;
+      }
+      const portfolioLoaded = !!(appState.files.portfolio || "").trim();
+      if (!appState.parsed.portfolio?.todo?.length && !portfolioLoaded) {
+        appState.parsed.portfolio.todo = JSON.parse(JSON.stringify(embedded.portfolio.todo || []));
+      }
+      if (!appState.parsed.portfolio?.groups?.length) {
+        appState.parsed.portfolio.groups = JSON.parse(JSON.stringify(embedded.portfolio.groups || []));
+      }
+      const parsedReports = appState.parsed.qa?.weeklyReports || [];
+      const hasValidParsedReport = parsedReports.some(reportLooksValid);
+      if (!hasValidParsedReport) {
+        appState.parsed.qa.weeklyReports = JSON.parse(JSON.stringify(embedded.qa.weeklyReports || []));
+      }
+      if (!appState.parsed.qa?.latestEnv) {
+        appState.parsed.qa.latestEnv = embedded.qa.latestEnv;
+      }
+    }
+
+    function persistState() {
+      const snapshot = {
+        files: appState.files,
+        parsed: appState.parsed,
+        manualOverride: appState.manualOverride
+      };
+      localStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
+    }
+
+    function restoreState() {
+      const raw = localStorage.getItem(STATE_KEY);
+      if (!raw) return;
+      try {
+        const obj = JSON.parse(raw);
+        appState.files = obj.files || {};
+        appState.parsed = obj.parsed || {};
+        appState.manualOverride = obj.manualOverride || {};
+        $("overrideJson").value = JSON.stringify(appState.manualOverride, null, 2);
+      } catch {}
+    }
+
+    async function handleManualFiles(files) {
+      const map = {};
+      const weeklyDirReports = [];
+      const reviewDirReports = [];
+      const fundResearchDirReports = [];
+      for (const file of files) map[file.name] = await file.text();
+      files.forEach((file) => {
+        if (/^\d{4}-\d{2}-\d{2}\.md$/.test(file.name)) {
+          weeklyDirReports.push({ name: file.name, text: map[file.name], updated: new Date().toLocaleString("zh-CN") });
+        }
+        const relPath = file.webkitRelativePath || "";
+        if ((relPath.includes("review-journal") || relPath.includes("review_journal")) && /^\d{4}-\d{2}-\d{2}\.md$/.test(file.name)) {
+          reviewDirReports.push({ name: file.name, text: map[file.name], updated: new Date().toLocaleString("zh-CN") });
+        }
+        if ((relPath.includes("fund-research") || relPath.includes("fund_research")) && /\.md$/i.test(file.name)) {
+          fundResearchDirReports.push({ name: file.name, text: map[file.name], updated: new Date().toLocaleString("zh-CN") });
+        }
+        if (/research\.md$/i.test(file.name) && !fundResearchDirReports.find((r) => r.name === file.name)) {
+          fundResearchDirReports.push({ name: file.name, text: map[file.name], updated: new Date().toLocaleString("zh-CN") });
+        }
+      });
+      if (map["portfolio-template.md"]) appState.files.portfolio = map["portfolio-template.md"];
+      if (map["QA_Log.md"]) appState.files.qa = map["QA_Log.md"];
+      if (map["weekly-briefs.md"]) appState.files.weeklyBriefs = map["weekly-briefs.md"];
+      if (map["daily-snapshots.md"]) appState.files.dailySnapshots = map["daily-snapshots.md"];
+      if (weeklyDirReports.length) appState.files.weeklyBriefDirReports = weeklyDirReports;
+      if (reviewDirReports.length) appState.files.reviewJournalDirReports = reviewDirReports;
+      if (fundResearchDirReports.length) appState.files.fundResearchDirReports = fundResearchDirReports;
+      if (map["discipline-rules.md"]) appState.files.discipline = map["discipline-rules.md"];
+      if (map["personal-glossary.md"]) appState.files.personalGlossary = map["personal-glossary.md"];
+      if (map["fund-glossary.md"]) appState.files.glossary = map["fund-glossary.md"];
+      if (map["review-journal.md"]) appState.files.review = map["review-journal.md"];
+      if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
+      Object.keys(map).forEach(name => {
+        const key = name.includes("portfolio") ? "portfolio" :
+          name.includes("QA_Log") ? "qa" :
+          name.includes("weekly-briefs") ? "weeklyBriefs" :
+          name.includes("daily-snapshots") ? "dailySnapshots" :
+          name.includes("discipline") ? "discipline" :
+          name.includes("review") ? "review" :
+          name.includes("sample-active") || name.includes("dongwu") ? "example" : name;
+        appState.parsed.filesMeta[key] = { updated: new Date().toLocaleString("zh-CN"), summary: fileSummary(map[name]) };
+      });
+      parseAll();
+      $("syncStatus").textContent = `已手动导入 ${files.length} 个文件并刷新。`;
+    }
+
+    function setupEvents() {
+      $("btnBackHome").onclick = () => switchTab("home");
+      $("btnBackHub").onclick = () => switchTab("hub");
+      $("btnPickDir").onclick = async () => {
+        if (!window.showDirectoryPicker) {
+          $("autoStatus").textContent = "当前浏览器不支持目录授权，请改用手动文件导入。";
+          return;
+        }
+        try {
+          appState.dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+          await saveDirHandle(appState.dirHandle);
+          await loadFromDirectory();
+          $("autoStatus").textContent = "目录授权成功（可读可写），已保存。复盘日记可写入本地。";
+        } catch (e) {
+          $("autoStatus").textContent = "目录授权取消或失败。";
+        }
+      };
+
+      $("btnRefresh").onclick = async () => {
+        if (appState.dirHandle) await loadFromDirectory();
+        else parseAll();
+      };
+
+      $("pollInterval").onchange = async (e) => {
+        const ms = Number(e.target.value);
+        localStorage.setItem(POLL_INTERVAL_KEY, String(ms));
+        if (appState.timer) clearInterval(appState.timer);
+        if (ms > 0) {
+          appState.timer = setInterval(() => {
+            if (appState.dirHandle) loadFromDirectory();
+          }, ms);
+        }
+      };
+
+      $("manualFiles").onchange = async (e) => {
+        const files = [...e.target.files];
+        if (files.length) await handleManualFiles(files);
+      };
+
+      $("btnApplyOverride").onclick = () => {
+        const txt = $("overrideJson").value.trim();
+        if (!txt) return;
+        try {
+          appState.manualOverride = JSON.parse(txt);
+          persistState();
+          refreshUI();
+          $("syncStatus").textContent = "已应用手动覆盖。";
+        } catch (e) {
+          $("syncStatus").textContent = "JSON 格式错误：" + e.message;
+        }
+      };
+
+      $("btnClearOverride").onclick = () => {
+        appState.manualOverride = {};
+        $("overrideJson").value = "{}";
+        persistState();
+        refreshUI();
+        $("syncStatus").textContent = "已清除手动覆盖。";
+      };
+
+      const reviewMonthEl = $("reviewDate");
+      if (reviewMonthEl && !reviewMonthEl.value) {
+        reviewMonthEl.value = localDateStr();
+      }
+      $("btnSaveReview").onclick = async () => {
+        const statusEl = $("reviewSaveStatus");
+        const date = $("reviewDate").value;
+        const title = $("reviewTitle").value;
+        const body = $("reviewBody").value;
+        if (!date) {
+          statusEl.textContent = "请选择日期。";
+          return;
+        }
+        if (!body.trim()) {
+          statusEl.textContent = "请填写复盘内容。";
+          return;
+        }
+        try {
+          const path = await appendReviewJournalEntry(date, title, body, getSelectedReviewMood());
+          statusEl.textContent = `已写入 ${path}，正在刷新…`;
+          $("reviewBody").value = "";
+          $("reviewTitle").value = "";
+          const picker = $("reviewMoodPicker");
+          if (picker) {
+            picker.dataset.selected = "";
+            picker.querySelectorAll(".mood-chip").forEach((b) => b.classList.remove("active"));
+          }
+          await loadFromDirectory();
+          refreshUI();
+          statusEl.textContent = `已保存到 ${path}。轮询开启时会自动检测更新。`;
+        } catch (e) {
+          statusEl.textContent = "保存失败：" + e.message;
+        }
+      };
+    }
+
+    function startPollTimer() {
+      const saved = Number(localStorage.getItem(POLL_INTERVAL_KEY) || "0");
+      if (saved > 0) $("pollInterval").value = String(saved);
+      if (appState.timer) clearInterval(appState.timer);
+      if (saved > 0) {
+        appState.timer = setInterval(() => {
+          if (appState.dirHandle) loadFromDirectory();
+        }, saved);
+      }
+    }
+
+    async function boot() {
+      initTabs();
+      setupEvents();
+      restoreState();
+      if (appState.files.portfolio && appState.files.qa && appState.files.discipline) parseAll();
+      else if (!localStorage.getItem(STATE_KEY)) {
+        appState.files = { ...EMBEDDED_BOOTSTRAP.files };
+        appState.parsed = JSON.parse(JSON.stringify(EMBEDDED_BOOTSTRAP.parsed));
+        persistState();
+        refreshUI();
+        $("syncStatus").textContent = "已加载内置初始数据。你可继续授权目录进行自动读取。";
+      } else {
+        refreshUI();
+        $("syncStatus").textContent = "已加载上次缓存。授权目录后可读取最新本地文件。";
+      }
+
+      const restored = await restoreDirectoryAccess();
+      if (restored) {
+        await loadFromDirectory();
+        $("autoStatus").textContent = "已自动恢复目录授权，正在读取最新本地文件。";
+        startPollTimer();
+      } else {
+        $("autoStatus").textContent = "尚未授权目录。点击“授权项目目录”后可自动读取本地文件。";
+      }
+      scheduleMidnightRefresh();
+    }
+
+    function scheduleMidnightRefresh() {
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(24, 0, 0, 0);
+      const delay = next - now;
+      setTimeout(() => {
+        const today = localDateStr();
+        if (appState.calView.selectedDate && appState.calView.selectedDate < today) {
+          appState.calView.selectedDate = today;
+        }
+        const [y, m] = today.split("-").map(Number);
+        if (appState.calView.year === y && appState.calView.month === m - 1) {
+          refreshUI();
+        } else {
+          appState.calView.year = y;
+          appState.calView.month = m - 1;
+          appState.calView.selectedDate = today;
+          refreshUI();
+        }
+        scheduleMidnightRefresh();
+      }, delay);
+      $("midnightTip").textContent = `每日 00:00 自动刷新昨日收益（下次：${next.toLocaleString("zh-CN")}）`;
+    }
+
+    boot();
+  </script>
+</body>
+</html>

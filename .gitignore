@@ -1,0 +1,16 @@
+# 私人数据 — 开源勿提交（templates/ 与 references/examples/ 可提交）
+assets/portfolio-template.md
+assets/daily-snapshots.md
+assets/discipline-rules.md
+assets/personal-glossary.md
+assets/review-journal.md
+assets/review-journal/
+assets/weekly-briefs/
+assets/fund-research/
+QA_Log.md
+
+# 本地与系统
+.DS_Store
+
+# 可选：自动化截图收件箱
+inbox/
