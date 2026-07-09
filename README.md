@@ -207,10 +207,9 @@ open ./dashboard.html
 │   ├── weekly-briefs/           # 周报
 │   ├── review-journal/          # 复盘日记
 │   └── fund-research/           # 基金研究报告
-└── QA_Log.md                    # 可选；全局 AI 规则用，fund-lab 看板读 assets/fund-knowledge.md
 ```
 
-**请勿**把 `assets/` 上传到公开仓库或发给他人。根目录 `QA_Log.md` 与 `assets/fund-knowledge.md` 职责不同（见 `skills/fund-lab/references/knowledge-base.md`）。
+**请勿**把 `assets/` 上传到公开仓库或发给他人。
 
 ---
 

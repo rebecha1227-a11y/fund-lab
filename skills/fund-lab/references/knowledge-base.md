@@ -48,15 +48,9 @@
 
 ---
 
-## 与根目录 `QA_Log.md` 的区别
+## 落盘位置
 
-| | `assets/fund-knowledge.md` | 项目根 `QA_Log.md` |
-|--|--|--|
-| 谁维护 | **fund-lab skill** 规则 | 用户全局 CLAUDE.md（若启用） |
-| 内容 | 仅基金投资问答 | 可能含工具/自动化等非投资内容 |
-| 看板 | ✅ 知识中枢展示 | ❌ 不读（除非旧版回退） |
-
-fund-lab 会话中**只写 `assets/fund-knowledge.md`**，不要往根目录 `QA_Log.md` 写投资内容（避免重复）。
+**只写 `assets/fund-knowledge.md`**。不要写入工作区其他位置的问答日志文件。
 
 ---
 

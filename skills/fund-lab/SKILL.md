@@ -147,8 +147,7 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 当用户问**基金投资相关**的概念/学习/决策问题（非 skill 安装、Automations、git 等工具问题）：
 
 1. 答完后**立即追加**到 **`assets/fund-knowledge.md`**（格式见 `references/knowledge-base.md`）
-2. **禁止**写入项目根目录 `QA_Log.md`
-3. **禁止**把工具配置类问答写入 fund-knowledge
+2. **禁止**把工具配置类问答写入 fund-knowledge
 
 若 `assets/fund-knowledge.md` 不存在，从 `templates/fund-knowledge.example.md` 复制创建。
 
