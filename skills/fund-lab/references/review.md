@@ -13,7 +13,7 @@
 - 每月固定提醒（如每月初）
 - 一次较大操作后（如组合再平衡/转换完成后）
 
-进入前先读：`portfolio-template.md`、`discipline-rules.md`、`assets/review-journal/`（或旧版 `review-journal.md`）、`QA_Log.md`。
+进入前先读：`portfolio-template.md`、`discipline-rules.md`、`assets/review-journal/`（或旧版 `review-journal.md`）、`assets/fund-knowledge.md`（可选）。
 
 ---
 

@@ -3,6 +3,7 @@ assets/portfolio-template.md
 assets/daily-snapshots.md
 assets/discipline-rules.md
 assets/personal-glossary.md
+assets/fund-knowledge.md
 assets/review-journal.md
 assets/review-journal/
 assets/weekly-briefs/
@@ -18,6 +19,9 @@ skills-lock.json
 
 # 可选：自动化截图收件箱
 inbox/
+
+# 初始化时从 skill 复制到工作区根目录的看板副本（正本在 skills/fund-lab/）
+/dashboard.html
 
 # 本机定时 git pull 日志
 .local-sync.log

@@ -43,16 +43,17 @@ metadata:
 - **用户私人档案** → **工作区根目录 `assets/`**（不是 skill 文件夹内）：
   - `assets/portfolio-template.md` — 持仓与结构（慢变量）
   - `assets/daily-snapshots.md` — 每日收益时间序列（快变量）
-  - `assets/discipline-rules.md`、`assets/review-journal/`（`YYYY-MM-DD.md`）、`QA_Log.md`
+  - `assets/discipline-rules.md`、`assets/review-journal/`（`YYYY-MM-DD.md`）
+  - `assets/fund-knowledge.md` — **基金知识库**（投资相关问答沉淀，随对话追加）
   - `assets/personal-glossary.md` — **个性化词典**（随对话追加）
   - `assets/weekly-briefs/YYYY-MM-DD.md` — 环境周报（目录模式）
   - `assets/fund-research/*.md` — 基金穿透研究报告
 - **方法论** → `references/`（流程说明、基础词典、虚构范例 `references/examples/`）
 - **安装模板** → `templates/`（空白 `.example.md`，复制到 `assets/` 后填写）
-- **本地看板** → `dashboard.html`（与 skill 同包分发；内嵌解析/联动逻辑，**只读**工作区 `assets/` 与 `references/`，不写 skill 包内文件）
+- **本地看板** → `dashboard.html`（与 skill 同包分发；**初始化时复制到工作区根目录**便于打开；内嵌解析逻辑，**只读**工作区 `assets/` 与 `references/`，不写 skill 包内文件）
 
 安装后从 `templates/*.example.md` 复制为 `assets/` 下正式文件（见 `README.md`）。  
-可将 `dashboard.html` 放在工作区便于打开，或从 skill 安装目录打开（见下）。维护者克隆本仓库时，看板在 `skills/fund-lab/dashboard.html`。  
+**初始化时**将 `dashboard.html` 从 skill 目录复制到**工作区根目录**（运行 `./scripts/copy-dashboard-to-workspace.sh` 或手动复制），与 `assets/` 同级，方便日常打开。skill 正本在 `skills/fund-lab/dashboard.html`（仓库）或 `~/.cursor/skills/fund-lab/`（全局安装）。  
 
 **安装（推荐）**：
 
@@ -66,9 +67,11 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 
 ### 看板怎么用
 
-1. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（安装后默认位置）；维护者克隆仓库时用 `skills/fund-lab/dashboard.html`
+1. 打开工作区根目录的 **`dashboard.html`**（初始化时从 skill 复制；见 `references/onboarding.md`）
 2. 浏览器中点击「授权项目目录」→ 选**含 `assets/` 的工作区文件夹**
 3. 看板通过目录 API 读取 `assets/*.md`、`references/fund-glossary.md` 等；AI 更新 md 后点「立即刷新」或开轮询
+
+**看板更新**：运行 `npx skills update` 后，再执行 `./scripts/copy-dashboard-to-workspace.sh` 覆盖工作区根目录的副本。
 
 看板不连接基金 API；所有数字来自本地 markdown。
 
@@ -101,6 +104,7 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 | `/压力测试` | 压力测试 | `references/stress-test.md` | 大跌扛不扛得住 |
 | `/模拟` | 情景模拟 | `references/simulation.md` | 调整配置 what-if |
 | `/词典 X` | 概念解释 | `references/fund-glossary.md` + `assets/personal-glossary.md` | 解释术语并追加到个性化词典 |
+| `/知识库` | 问答沉淀 | `references/knowledge-base.md` | 投资相关概念问答写入 fund-knowledge |
 | `/更新持仓` | 更新档案 | `assets/portfolio-template.md` | 交易后更新份额 |
 
 ## 请求路由（节选）
@@ -138,11 +142,21 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 4. **禁止**把用户个性化内容写进 `references/fund-glossary.md`（那是开源模板）
 5. 若 `assets/personal-glossary.md` 不存在，从 `templates/personal-glossary.example.md` 复制创建
 
+### `/知识库`（投资问答沉淀）
+
+当用户问**基金投资相关**的概念/学习/决策问题（非 skill 安装、Automations、git 等工具问题）：
+
+1. 答完后**立即追加**到 **`assets/fund-knowledge.md`**（格式见 `references/knowledge-base.md`）
+2. **禁止**写入项目根目录 `QA_Log.md`
+3. **禁止**把工具配置类问答写入 fund-knowledge
+
+若 `assets/fund-knowledge.md` 不存在，从 `templates/fund-knowledge.example.md` 复制创建。
+
 ## 附带资源（按需加载）
 
-**references/**：`onboarding.md`、`daily-snapshot.md`、`loss-checkup.md`、`market-context.md`、`discipline.md`、`review.md`、`stress-test.md`、`simulation.md`、`fund-glossary.md`、`risk-and-compliance.md`；虚构范例见 `references/examples/`
+**references/**：`onboarding.md`、`knowledge-base.md`、`daily-snapshot.md`、`loss-checkup.md`、`market-context.md`、`discipline.md`、`review.md`、`stress-test.md`、`simulation.md`、`fund-glossary.md`、`risk-and-compliance.md`；虚构范例见 `references/examples/`
 
-**templates/**：`portfolio-template.example.md`、`daily-snapshots.example.md`、`discipline-rules.example.md`、`personal-glossary.example.md`、`weekly-brief.example.md`、`weekly-briefs.example/`、`review-journal.example/`
+**templates/**：`portfolio-template.example.md`、`daily-snapshots.example.md`、`discipline-rules.example.md`、`personal-glossary.example.md`、`fund-knowledge.example.md`、`weekly-brief.example.md`、`weekly-briefs.example/`、`review-journal.example/`
 
 **dashboard.html**：本地 HTML 看板（收益日历/曲线、周报、知识中枢；内嵌 `parsePortfolio` / `loadFromDirectory` 等，读工作区 md）
 

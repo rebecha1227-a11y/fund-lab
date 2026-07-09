@@ -1512,14 +1512,15 @@
     const FUND_RESEARCH_DIR = "assets/fund-research";
     const DEFAULT_PATHS = {
       portfolio: "assets/portfolio-template.md",
-      qa: "QA_Log.md",
+      qa: "assets/fund-knowledge.md",
       discipline: "assets/discipline-rules.md",
       glossary: "references/fund-glossary.md",
       personalGlossary: "assets/personal-glossary.md",
       dailySnapshots: "assets/daily-snapshots.md"
     };
     const PATH_FALLBACKS = {
-      glossary: ["skills/fund-lab/references/fund-glossary.md"]
+      glossary: ["skills/fund-lab/references/fund-glossary.md"],
+      qa: ["QA_Log.md"]
     };
     const WEEKLY_BRIEFS_DIR = "assets/weekly-briefs";
 
@@ -3703,7 +3704,7 @@
           };
           item.onclick = (e) => {
             if (e.target.closest(".knowledge-item-del")) return;
-            openHubDoc(`QA｜${sec.title}`, sec.body || "");
+            openHubDoc(`知识库｜${sec.title}`, sec.body || "");
           };
           timeline.appendChild(item);
         });
@@ -4085,7 +4086,7 @@
             if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
             appState.parsed.filesMeta[key] = { updated, summary: fileSummary(text), path: resolvedPath };
           } catch (err) {
-            const optional = key === "dailySnapshots" || key === "glossary" || key === "personalGlossary";
+            const optional = key === "dailySnapshots" || key === "glossary" || key === "personalGlossary" || key === "qa";
             if (optional) missingOptional.push(candidates.join(" | "));
             else missingRequired.push(candidates.join(" | "));
           }
@@ -4224,7 +4225,8 @@
         }
       });
       if (map["portfolio-template.md"]) appState.files.portfolio = map["portfolio-template.md"];
-      if (map["QA_Log.md"]) appState.files.qa = map["QA_Log.md"];
+      if (map["assets/fund-knowledge.md"]) appState.files.qa = map["assets/fund-knowledge.md"];
+      else if (map["QA_Log.md"]) appState.files.qa = map["QA_Log.md"];
       if (map["weekly-briefs.md"]) appState.files.weeklyBriefs = map["weekly-briefs.md"];
       if (map["daily-snapshots.md"]) appState.files.dailySnapshots = map["daily-snapshots.md"];
       if (weeklyDirReports.length) appState.files.weeklyBriefDirReports = weeklyDirReports;
@@ -4237,7 +4239,7 @@
       if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
       Object.keys(map).forEach(name => {
         const key = name.includes("portfolio") ? "portfolio" :
-          name.includes("QA_Log") ? "qa" :
+          name.includes("fund-knowledge") || name.includes("QA_Log") ? "qa" :
           name.includes("weekly-briefs") ? "weeklyBriefs" :
           name.includes("daily-snapshots") ? "dailySnapshots" :
           name.includes("discipline") ? "discipline" :
@@ -4360,7 +4362,7 @@
       initTabs();
       setupEvents();
       restoreState();
-      if (appState.files.portfolio && appState.files.qa && appState.files.discipline) parseAll();
+      if (appState.files.portfolio && appState.files.discipline) parseAll();
       else if (!localStorage.getItem(STATE_KEY)) {
         appState.files = { ...EMBEDDED_BOOTSTRAP.files };
         appState.parsed = JSON.parse(JSON.stringify(EMBEDDED_BOOTSTRAP.parsed));

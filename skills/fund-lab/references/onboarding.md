@@ -8,7 +8,7 @@
 
 1. **不连接任何基金账户 API**——所有数据来自用户提供的截图、导出或口述，存在本地 markdown 里。
 2. **不预测涨跌、不下买卖指令**——只帮理清结构、纪律和决策要素。
-3. **私人数据留在用户自己电脑**——开源包不含你的持仓；`assets/` 和 `QA_Log.md` 请勿提交到公开仓库。
+3. **私人数据留在用户自己电脑**——开源包不含你的持仓；`assets/` 请勿提交到公开仓库。根目录 `QA_Log.md`（若存在）由全局 AI 规则维护，与 fund-lab 的 **`assets/fund-knowledge.md`（基金知识库）** 分开。
 
 ---
 
@@ -64,8 +64,13 @@
 3. 初始化 `assets/daily-snapshots.md`（从 `templates/daily-snapshots.example.md` 复制表头）
 4. 初始化 `assets/discipline-rules.md`（从 `templates/discipline-rules.example.md`）
 5. 可选：`assets/personal-glossary.md`（从 `templates/personal-glossary.example.md`）
-6. 创建目录 `assets/weekly-briefs/`、`assets/review-journal/`、`assets/fund-research/`
-7. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（安装后）；克隆本仓库时用 `skills/fund-lab/dashboard.html` → **授权本项目文件夹**
+6. 可选：`assets/fund-knowledge.md`（从 `templates/fund-knowledge.example.md`，基金投资问答沉淀）
+7. 创建目录 `assets/weekly-briefs/`、`assets/review-journal/`、`assets/fund-research/`
+8. **复制看板到工作区根目录**（方便找到，不必去 `~/.cursor/skills/` 里翻）：
+   - 运行 `./scripts/copy-dashboard-to-workspace.sh`，或
+   - 从 skill 安装目录复制 `dashboard.html` 到**工作区根目录**（与 `assets/` 同级）
+   - skill 正本路径（按安装方式择一）：`~/.cursor/skills/fund-lab/dashboard.html`、`.agents/skills/fund-lab/dashboard.html`、或克隆仓的 `skills/fund-lab/dashboard.html`
+9. 打开工作区根目录的 **`dashboard.html`** → 浏览器中 **「授权项目目录」** → 选**本工作区文件夹**（含 `assets/` 的那一层）
 
 ---
 
@@ -91,7 +96,7 @@
 2）发一张持仓总览截图，或列出：基金名 + 份额 + 定投还是一次性
 3）你平时看「今天赚/亏多少」用哪个 App 或页面？
 
-拿到后我会写入你本地的 portfolio 档案，并教你看板怎么授权本文件夹刷新。
+拿到后我会写入你本地的 portfolio 档案，把看板复制到你文件夹根目录，并教你怎么授权刷新。
 ```
 
 ---
