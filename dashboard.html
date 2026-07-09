@@ -1720,11 +1720,11 @@
           if (/投资组合合计|总资产合计/.test(line)) result.totals.total = parseNumber(line);
           if (/余额宝（不在养基宝）/.test(line)) result.totals.cash = parseNumber(line);
           if (/合计约/.test(line) && result.totals.total == null) result.totals.total = parseNumber(line);
-          if (/当日收益/.test(line) && !/累计/.test(line)) {
+          if (/^\|\s*当日收益/.test(line) && !/累计/.test(line)) {
             const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
             if (m) result.totals.daily = Number(m[1].replace(/,/g, ""));
           }
-          if (/昨日收益/.test(line) && !/累计/.test(line)) {
+          if (/^\|\s*昨日收益/.test(line) && !/累计/.test(line)) {
             const m = line.match(/([+-]?\d[\d,]*(?:\.\d+)?)\s*元/);
             if (m) result.totals.yesterdayProfit = Number(m[1].replace(/,/g, ""));
           }
@@ -2434,19 +2434,41 @@
       return { rows, latest: rows.length ? rows[rows.length - 1] : null };
     }
 
-    function prevDayDailyProfit(rows, latestDate) {
-      if (!latestDate || !rows?.length) return null;
-      const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
-      const idx = sorted.findIndex((r) => r.date === latestDate);
-      if (idx <= 0) return null;
-      const v = sorted[idx - 1].daily_profit;
-      return v != null && !Number.isNaN(v) ? v : null;
+    function shiftDateStr(dateStr, deltaDays) {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setDate(dt.getDate() + deltaDays);
+      return localDateStr(dt);
+    }
+
+    function findSnapshotRow(rows, dateStr) {
+      if (!dateStr || !rows?.length) return null;
+      return rows.find((r) => r.date === dateStr) || null;
+    }
+
+    function isStaleTodayDailyProfit(todayRow, yesterdayRow) {
+      if (!todayRow || todayRow.daily_profit == null) return false;
+      // 凌晨回填偶发：今日行 daily 误存为昨日行的 yesterday_profit（前前一日收益）
+      if (yesterdayRow?.yesterday_profit != null && todayRow.daily_profit === yesterdayRow.yesterday_profit) {
+        return true;
+      }
+      return false;
+    }
+
+    function resolveTodayDailyProfit(todayRow, yesterdayRow) {
+      if (!todayRow || todayRow.daily_profit == null) return null;
+      if (isStaleTodayDailyProfit(todayRow, yesterdayRow)) return null;
+      return todayRow.daily_profit;
     }
 
     function pickKpiData(portfolio, snapshots) {
       const p = portfolio?.totals || {};
       const rows = snapshots?.rows || [];
       const snap = snapshots?.latest || null;
+      const today = localDateStr();
+      const yesterday = shiftDateStr(today, -1);
+      const todayRow = findSnapshotRow(rows, today);
+      const yesterdayRow = findSnapshotRow(rows, yesterday);
       const lastNonNull = (key) => {
         for (let i = rows.length - 1; i >= 0; i--) {
           const v = rows[i]?.[key];
@@ -2458,35 +2480,34 @@
       const nanfang = p.nanfangTotal ?? null;
       const platformTotal = (alipay != null && nanfang != null) ? alipay + nanfang : null;
       const total =
+        todayRow?.total_assets ??
         snap?.total_assets ??
         lastNonNull("total_assets") ??
         p.total ??
         platformTotal ??
         p.equity ??
         null;
-      const todayProfit =
-        snap?.daily_profit ??
-        lastNonNull("daily_profit") ??
-        p.daily ??
-        null;
+      // 与收益日历一致：只认今日/昨日快照行，不用 portfolio 里滞后的「当日收益」字段
+      const todayProfit = resolveTodayDailyProfit(todayRow, yesterdayRow);
       const yesterdayProfit =
-        prevDayDailyProfit(rows, snap?.date) ??
-        snap?.yesterday_profit ??
-        lastNonNull("yesterday_profit") ??
-        p.yesterdayProfit ??
+        todayRow?.yesterday_profit ??
+        yesterdayRow?.daily_profit ??
         null;
       const holdingProfit =
+        todayRow?.holding_profit ??
         snap?.holding_profit ??
         lastNonNull("holding_profit") ??
         p.holdingProfit ??
         null;
       const accumProfit =
+        todayRow?.accum_profit ??
         snap?.accum_profit ??
         lastNonNull("accum_profit") ??
         p.accumProfit ??
         null;
       const sources = [];
-      if (snap?.total_assets != null || snap?.daily_profit != null) sources.push("daily-snapshots");
+      if (todayRow?.total_assets != null || todayRow?.daily_profit != null) sources.push("daily-snapshots");
+      else if (snap?.total_assets != null || snap?.daily_profit != null) sources.push("daily-snapshots");
       if (p.alipayTotal != null || p.nanfangTotal != null || p.total != null) sources.push("portfolio-template");
       const sourceNote = sources.length
         ? `数据口径：支付宝 + 南方基金；来源 ${[...new Set(sources)].join(" + ")}`
@@ -3197,14 +3218,16 @@
 
       const snapshotRows = parsed.dailySnapshots?.rows || [];
       const kpi = pickKpiData(p, parsed.dailySnapshots || { latest: null });
+      const today = localDateStr();
+      const yesterday = shiftDateStr(today, -1);
 
       $("kpiTotal").textContent = formatMoney(kpi.total);
       $("kpiDaily").textContent = formatMoney(kpi.todayProfit);
       $("kpiDaily").className = "value " + profitClass(kpi.todayProfit);
-      $("kpiDailySub").textContent = kpi.todayProfit != null ? "养基宝口径（支付宝待更新）" : "待更新";
+      $("kpiDailySub").textContent = kpi.todayProfit != null ? `养基宝口径（${today}）` : "待更新";
       $("kpiYesterday").textContent = formatMoney(kpi.yesterdayProfit);
       $("kpiYesterday").className = "value " + profitClass(kpi.yesterdayProfit);
-      $("kpiYesterdaySub").textContent = kpi.yesterdayProfit != null ? "养基宝口径（前一日）" : "待更新";
+      $("kpiYesterdaySub").textContent = kpi.yesterdayProfit != null ? `养基宝口径（${yesterday}）` : "待更新";
       $("kpiHolding").textContent = formatMoney(kpi.holdingProfit);
       $("kpiAccum").textContent = formatMoney(kpi.accumProfit);
       $("kpiHolding").className = "value " + profitClass(kpi.holdingProfit);
