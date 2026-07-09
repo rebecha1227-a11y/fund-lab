@@ -27,29 +27,88 @@
 
 需要已安装 [Node.js](https://nodejs.org/)（用于运行 `npx`）。
 
-使用 [Skills CLI](https://github.com/vercel-labs/skills) 一行安装，支持 **Cursor、Claude Code、Codex** 等主流 AI Agent：
+Fund Lab 通过 [Skills CLI](https://github.com/vercel-labs/skills) 分发，**Cursor、Claude Code、Codex、Gemini CLI** 等 70+ AI 工具都能识别。也可在 [skills.sh](https://skills.sh) 搜索 `fund-lab`。
+
+### 选项 1：一行安装（推荐）
+
+在终端运行：
 
 ```bash
-# Cursor（最常用）
-npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y
+npx skills@latest add rebecha1227-a11y/fund-lab
 ```
 
-```bash
-# 其他工具（按需选一个）
-npx skills add rebecha1227-a11y/fund-lab -g -a claude-code -y
-npx skills add rebecha1227-a11y/fund-lab -g -a codex -y
-```
+运行后会：
 
-安装完成后，skill 位于：
+1. 从 GitHub 拉取最新 skill（含 `dashboard.html` 看板）
+2. **自动检测**你电脑上已安装的 AI 工具
+3. 让你选择安装到 **当前项目** 还是 **全局**
 
-- **macOS / Linux**：`~/.cursor/skills/fund-lab/`（Cursor）
-- 内含：`SKILL.md`、`references/`、`templates/`、**`dashboard.html`（看板）**
+安装完成后，**重新打开或重载**你的 AI 工具（例如重启 Cursor、新开一个对话窗口）。
 
-### 更新
+刷新到最新版：
 
 ```bash
 npx skills update
 ```
+
+---
+
+### 选项 2：指定 AI 工具安装
+
+如果自动检测没认出你的工具，可以手动指定 Agent（`-a` 是 `--agent` 的简写）：
+
+| 工具 | 命令 |
+|------|------|
+| **Cursor** | `npx skills add rebecha1227-a11y/fund-lab -a cursor` |
+| **Claude Code** | `npx skills add rebecha1227-a11y/fund-lab -a claude-code` |
+| **Codex** | `npx skills add rebecha1227-a11y/fund-lab -a codex` |
+| **Gemini CLI** | `npx skills add rebecha1227-a11y/fund-lab -a gemini-cli` |
+
+一次装给多个工具：
+
+```bash
+npx skills add rebecha1227-a11y/fund-lab -a cursor -a claude-code
+```
+
+**装到全局**（所有项目都能用，推荐基金档案单独放一个文件夹时）：
+
+```bash
+npx skills add rebecha1227-a11y/fund-lab -g
+```
+
+---
+
+### 选项 3：无交互安装（脚本 / 高级用户）
+
+想跳过所有确认提示时再加 `-y`：
+
+```bash
+npx skills add rebecha1227-a11y/fund-lab -g -y
+```
+
+---
+
+### 选项 4：Git 克隆（可选）
+
+只想用 git 备份自己的工作区，可以克隆仓库，但 **仍建议执行选项 1** 让 AI 工具能自动识别 skill：
+
+```bash
+git clone https://github.com/rebecha1227-a11y/fund-lab.git
+cd fund-lab
+npx skills@latest add rebecha1227-a11y/fund-lab
+```
+
+---
+
+### 装好后文件在哪
+
+| 安装范围 | 典型路径 |
+|----------|----------|
+| 全局（Cursor） | `~/.cursor/skills/fund-lab/` |
+| 当前项目 | `.cursor/skills/fund-lab/` 或 `.agents/skills/fund-lab/` |
+
+skill 包里包含：`SKILL.md`、`references/`、`templates/`、**`dashboard.html`（本地看板）**。  
+你的私人持仓数据**不在这里**，而在你自己工作区的 `assets/` 文件夹（见下文「快速开始」）。
 
 ---
 
@@ -147,7 +206,7 @@ open ~/.cursor/skills/fund-lab/dashboard.html
 复制整个工作区文件夹（含 `assets/`）到新电脑，重新 `npx skills add ...` 安装 skill，再授权目录即可。
 
 **Q：和其他 AI 工具能用吗？**  
-可以。用对应的 `-a` 参数安装 skill，用自然语言说「按 fund-lab 帮我透视」等即可，不必有 `/fund-lab` 斜杠命令。
+可以。运行 `npx skills@latest add rebecha1227-a11y/fund-lab`，安装程序会自动检测；或用选项 2 手动指定 Agent。装好后用自然语言说「按 fund-lab 帮我透视」即可，不一定需要 `/fund-lab` 斜杠命令。
 
 ---
 

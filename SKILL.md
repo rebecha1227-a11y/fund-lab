@@ -57,12 +57,12 @@ metadata:
 **安装（推荐）**：
 
 ```bash
-npx skills add rebecha1227-a11y/fund-lab -g -a cursor -y
+npx skills@latest add rebecha1227-a11y/fund-lab
 ```
 
-**更新**：`npx skills update`  
+**更新**：`npx skills update`
 
-**Cursor 用户**：skill 在全局 `~/.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。维护者本地改完正本可运行 `scripts/sync-skill-to-global.sh`。
+**Cursor 用户**：skill 在 `~/.cursor/skills/fund-lab/`（全局）或项目内 `.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。
 
 ### 看板怎么用
 
