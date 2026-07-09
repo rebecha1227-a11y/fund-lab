@@ -93,4 +93,4 @@
 
 ## 七、自动化预留
 
-定时 Agent 可读取 `inbox/` 下截图，按本文件更新 `daily-snapshots.md`。详见项目 `README.md`「数据自动化」章节。
+定时 Agent 可读取 `inbox/` 下截图，按本文件更新 `daily-snapshots.md`。云端 Automation + 本机 `git pull` + 看板轮询的完整教程见仓库根目录 `README.md`「**数据自动化**」章节。

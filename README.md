@@ -205,6 +205,137 @@ open ~/.cursor/skills/fund-lab/dashboard.html
 
 ---
 
+## 数据自动化：每日收益更新 + 看板自动同步
+
+适合「不想每天手动发截图、又想让看板自动显示最新收益」的用户。需要 **私有 GitHub 仓库**（含 `assets/`）+ **Cursor Automations** + **Mac 本机定时 pull**。
+
+### 整体链路（一张图）
+
+```mermaid
+flowchart LR
+  A[23:00 Cursor Automation] --> B[改私有仓 assets/*.md]
+  B --> C[push 到 GitHub]
+  C --> D[23:05 Mac 快捷指令 git pull]
+  D --> E[本机文件夹更新]
+  E --> F[dashboard 轮询或刷新]
+```
+
+看板**只读本机文件夹**，不连 GitHub；所以云端改完以后，本机必须有一次 `git pull`。
+
+---
+
+### 前提准备
+
+1. **私有仓库**：例如 `Personal-fund-lab`，已提交 `assets/portfolio-template.md`、`assets/daily-snapshots.md`。
+2. **Cursor 连 GitHub**：在 [cursor.com/dashboard](https://cursor.com/dashboard) 授权，并勾选该私有仓。
+3. **本机文件夹**：用 git 克隆私有仓，或你现在的项目文件夹 `git remote` 指向私有仓的 `origin`。
+
+---
+
+### 第一步：Cursor Automations（云端 23:00 写数据）
+
+1. 打开 [cursor.com/automations](https://cursor.com/automations) → **New Automation**
+2. 填写：
+
+| 项目 | 建议值 |
+|------|--------|
+| 名称 | fund-lab 每日收益快照 |
+| 触发 | 每天 **23:00** |
+| 仓库 | 你的**私有仓**（不是公开 fund-lab） |
+| 分支 | `main`（下拉 load 不出就**手填**） |
+| 指令 | 读 `skills/fund-lab/references/daily-snapshot.md`，联网查净值，更新 `assets/daily-snapshots.md` 与 portfolio 基本情况，commit 后 **直接 push main**（不必开 PR） |
+
+3. 保存并 **Enable**；建议先 **Run now** 测一次，去 GitHub 看有没有新 commit。
+
+#### 时区别搞错（很重要）
+
+| 说法 | 是不是晚上 11 点？ |
+|------|-------------------|
+| **北京时间 / GMT+8 的 23:00** | ✅ 是晚上 11 点 |
+| **GMT+8 的 7:00** | ❌ 是早上 7 点，不是晚上 11 点 |
+| **UTC 15:00** | ✅ 等于北京时间 23:00（UTC+8） |
+
+Automations 里若时区选 **Asia/Shanghai / GMT+8**，时间填 **23:00** 即可。  
+若界面只有 UTC，应填 **15:00**（不是 7:00）。
+
+---
+
+### 第二步：Mac 快捷指令（本机 23:05 自动 pull）
+
+比 Automation 晚 5 分钟，等云端 push 完成后再拉。
+
+#### A. 先给脚本执行权限（只需一次）
+
+在终端运行（把路径换成你的私有仓本机文件夹）：
+
+```bash
+chmod +x "/path/to/your/workspace/scripts/local-git-pull.sh"
+```
+
+示例（静儿本机）：
+
+```bash
+chmod +x "/Users/rebecha/Desktop/投资研究复盘预测模拟/scripts/local-git-pull.sh"
+```
+
+#### B. 新建快捷指令
+
+1. 打开 Mac **「快捷指令」** App
+2. 点左上角 **+** 新建快捷指令
+3. 搜索并添加 **「运行 Shell 脚本」**
+4. 设置：
+   - Shell：`/bin/zsh`
+   - 输入模式：**作为参数传入** 可关
+   - 脚本内容（二选一）：
+
+**方式 1（推荐）**：调用仓库里的脚本
+
+```bash
+"/Users/rebecha/Desktop/投资研究复盘预测模拟/scripts/local-git-pull.sh"
+```
+
+**方式 2**：直接写命令
+
+```bash
+cd "/Users/rebecha/Desktop/投资研究复盘预测模拟" && git pull origin main
+```
+
+5. 把快捷指令命名为：`fund-lab 每日同步`
+
+#### C. 设成每天 23:05 自动跑
+
+1. 打开 Mac **「快捷指令」** → 左侧 **「自动化」**（或「个人自动化」）
+2. **新建自动化** → **特定时间**
+3. 时间：**23:05**，重复：**每天**
+4. 下一步 → 添加操作 **「运行快捷指令」** → 选 `fund-lab 每日同步`
+5. 关闭 **「运行前询问」**（否则每次还要你点确认）
+6. 完成
+
+同步日志写在项目根目录 `.local-sync.log`（已加入 `.gitignore`）。
+
+---
+
+### 第三步：看板自动显示新数据
+
+1. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（或克隆仓里的 `skills/fund-lab/dashboard.html`）
+2. **授权项目目录** → 选含 `assets/` 的本机文件夹（与 `git pull` 的是同一个）
+3. 在看板 **「数据与自动化设置」** 里开启 **轮询刷新**（例如每 5 或 15 分钟）
+
+这样 23:05 pull 完成后，下一轮轮询会自动读到新收益；也可手动点「立即刷新」。
+
+---
+
+### 故障排查
+
+| 现象 | 可能原因 | 处理 |
+|------|----------|------|
+| Automation branch 一直转圈 | GitHub 未授权私有仓 | 手填 `main`；检查 GitHub App 是否勾选私有仓 |
+| GitHub 有新 commit，看板没变 | 本机没 pull | 看 `.local-sync.log`；手动运行一次快捷指令 |
+| 快捷指令没跑 | 「运行前询问」还开着 | 自动化里关掉询问 |
+| 时区不对 | 把早上 7 点当成晚上 11 点 | 北京时间 23:00 = GMT+8 **23:00**，不是 7:00 |
+
+---
+
 ## 常见问题
 
 **Q：一定要克隆 GitHub 仓库吗？**  
