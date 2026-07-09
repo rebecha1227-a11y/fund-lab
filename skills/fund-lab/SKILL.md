@@ -52,7 +52,7 @@ metadata:
 - **本地看板** → `dashboard.html`（与 skill 同包分发；内嵌解析/联动逻辑，**只读**工作区 `assets/` 与 `references/`，不写 skill 包内文件）
 
 安装后从 `templates/*.example.md` 复制为 `assets/` 下正式文件（见 `README.md`）。  
-可将 `dashboard.html` 放在工作区根目录，或直接从 skill 目录打开（见下）。  
+可将 `dashboard.html` 放在工作区便于打开，或从 skill 安装目录打开（见下）。维护者克隆本仓库时，看板在 `skills/fund-lab/dashboard.html`。  
 
 **安装（推荐）**：
 
@@ -62,11 +62,11 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 
 **更新**：`npx skills update`
 
-**Cursor 用户**：skill 在 `~/.cursor/skills/fund-lab/`（全局）或项目内 `.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。
+**Cursor 用户**：skill 在 `~/.cursor/skills/fund-lab/`（全局）或项目内 `.agents/skills/fund-lab/` / `.cursor/skills/fund-lab/`（含 `dashboard.html`）；数据仍在工作区 `assets/`。维护者改完正本后运行 `scripts/sync-skill-to-global.sh`。
 
 ### 看板怎么用
 
-1. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（或工作区根目录的副本）
+1. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（安装后默认位置）；维护者克隆仓库时用 `skills/fund-lab/dashboard.html`
 2. 浏览器中点击「授权项目目录」→ 选**含 `assets/` 的工作区文件夹**
 3. 看板通过目录 API 读取 `assets/*.md`、`references/fund-glossary.md` 等；AI 更新 md 后点「立即刷新」或开轮询
 

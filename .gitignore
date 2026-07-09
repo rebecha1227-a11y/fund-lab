@@ -9,6 +9,10 @@ assets/weekly-briefs/
 assets/fund-research/
 QA_Log.md
 
+# Skills CLI 本地安装产物（勿提交）
+.agents/
+skills-lock.json
+
 # 本地与系统
 .DS_Store
 

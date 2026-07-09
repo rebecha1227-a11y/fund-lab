@@ -1518,6 +1518,9 @@
       personalGlossary: "assets/personal-glossary.md",
       dailySnapshots: "assets/daily-snapshots.md"
     };
+    const PATH_FALLBACKS = {
+      glossary: ["skills/fund-lab/references/fund-glossary.md"]
+    };
     const WEEKLY_BRIEFS_DIR = "assets/weekly-briefs";
 
     const EMBEDDED_BOOTSTRAP = {
@@ -4056,6 +4059,18 @@
       return true;
     }
 
+    async function readFirstAvailableFile(dirHandle, paths) {
+      let lastError = null;
+      for (const path of paths) {
+        try {
+          return { ...(await readFileHandleText(dirHandle, path)), path };
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw lastError || new Error("file not found");
+    }
+
     async function loadFromDirectory() {
       if (!appState.dirHandle) return;
       const fileMap = {};
@@ -4063,15 +4078,16 @@
       const missingRequired = [];
       try {
         for (const [key, path] of Object.entries(DEFAULT_PATHS)) {
+          const candidates = [path, ...(PATH_FALLBACKS[key] || [])];
           try {
-            const { text, updated } = await readFileHandleText(appState.dirHandle, path);
+            const { text, updated, path: resolvedPath } = await readFirstAvailableFile(appState.dirHandle, candidates);
             fileMap[key] = text;
             if (!appState.parsed.filesMeta) appState.parsed.filesMeta = {};
-            appState.parsed.filesMeta[key] = { updated, summary: fileSummary(text) };
+            appState.parsed.filesMeta[key] = { updated, summary: fileSummary(text), path: resolvedPath };
           } catch (err) {
             const optional = key === "dailySnapshots" || key === "glossary" || key === "personalGlossary";
-            if (optional) missingOptional.push(path);
-            else missingRequired.push(path);
+            if (optional) missingOptional.push(candidates.join(" | "));
+            else missingRequired.push(candidates.join(" | "));
           }
         }
         try {

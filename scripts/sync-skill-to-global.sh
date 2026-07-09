@@ -5,13 +5,14 @@
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILL="$ROOT/skills/fund-lab"
 GLOBAL="${HOME}/.cursor/skills/fund-lab"
 
 mkdir -p "$GLOBAL"
-cp "$ROOT/SKILL.md" "$GLOBAL/SKILL.md"
-cp "$ROOT/dashboard.html" "$GLOBAL/dashboard.html"
-cp -R "$ROOT/references" "$GLOBAL/"
-cp -R "$ROOT/templates" "$GLOBAL/"
+cp "$SKILL/SKILL.md" "$GLOBAL/SKILL.md"
+cp "$SKILL/dashboard.html" "$GLOBAL/dashboard.html"
+cp -R "$SKILL/references" "$GLOBAL/"
+cp -R "$SKILL/templates" "$GLOBAL/"
 find "$GLOBAL" -name '.DS_Store' -delete 2>/dev/null || true
 
 echo "已同步到 ${GLOBAL}"

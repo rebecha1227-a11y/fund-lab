@@ -65,7 +65,7 @@
 4. 初始化 `assets/discipline-rules.md`（从 `templates/discipline-rules.example.md`）
 5. 可选：`assets/personal-glossary.md`（从 `templates/personal-glossary.example.md`）
 6. 创建目录 `assets/weekly-briefs/`、`assets/review-journal/`、`assets/fund-research/`
-7. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（或工作区 `dashboard.html`）→ **授权本项目文件夹**
+7. 打开看板：`~/.cursor/skills/fund-lab/dashboard.html`（安装后）；克隆本仓库时用 `skills/fund-lab/dashboard.html` → **授权本项目文件夹**
 
 ---
 

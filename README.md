@@ -105,7 +105,9 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 | 安装范围 | 典型路径 |
 |----------|----------|
 | 全局（你的 AI agent） | `~/.cursor/skills/fund-lab/` |
-| 当前项目 | `.cursor/skills/fund-lab/` 或 `.agents/skills/fund-lab/` |
+| 当前项目 | `.agents/skills/fund-lab/` 或 `.cursor/skills/fund-lab/` |
+
+GitHub 仓库内 skill 正本在 **`skills/fund-lab/`**（供 `npx skills add` 发现与安装）。
 
 skill 包里包含：`SKILL.md`、`references/`、`templates/`、**`dashboard.html`（本地看板）**。  
 你的私人持仓数据**不在这里**，而在你自己工作区的 `assets/` 文件夹（见下文「快速开始」）。
@@ -221,6 +223,6 @@ open ~/.cursor/skills/fund-lab/dashboard.html
 
 ## 许可
 
-MIT License · 见 [SKILL.md](./SKILL.md)
+MIT License · 见 [skills/fund-lab/SKILL.md](./skills/fund-lab/SKILL.md)
 
-虚构基金研究范例见 `references/examples/`，仅供学习格式参考。
+虚构基金研究范例见 `skills/fund-lab/references/examples/`，仅供学习格式参考。
