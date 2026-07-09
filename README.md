@@ -27,7 +27,7 @@
 
 需要已安装 [Node.js](https://nodejs.org/)（用于运行 `npx`）。
 
-Fund Lab 通过 [Skills CLI](https://github.com/vercel-labs/skills) 分发，**Cursor、Claude Code、Codex、Gemini CLI** 等 70+ AI 工具都能识别。也可在 [skills.sh](https://skills.sh) 搜索 `fund-lab`。
+Fund Lab 通过 [Skills CLI](https://github.com/vercel-labs/skills) 分发，**你的 AI agent** 及 Claude Code、Codex、Gemini CLI 等 70+ 工具都能识别。也可在 [skills.sh](https://skills.sh) 搜索 `fund-lab`。
 
 ### 选项 1：一行安装（推荐）
 
@@ -43,7 +43,7 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 2. **自动检测**你电脑上已安装的 AI 工具
 3. 让你选择安装到 **当前项目** 还是 **全局**
 
-安装完成后，**重新打开或重载**你的 AI 工具（例如重启 Cursor、新开一个对话窗口）。
+安装完成后，**重新打开或重载**你的 AI agent（例如重启应用、新开一个对话窗口）。
 
 刷新到最新版：
 
@@ -59,7 +59,7 @@ npx skills update
 
 | 工具 | 命令 |
 |------|------|
-| **Cursor** | `npx skills add rebecha1227-a11y/fund-lab -a cursor` |
+| **你的 AI agent** | `npx skills add rebecha1227-a11y/fund-lab -a cursor` |
 | **Claude Code** | `npx skills add rebecha1227-a11y/fund-lab -a claude-code` |
 | **Codex** | `npx skills add rebecha1227-a11y/fund-lab -a codex` |
 | **Gemini CLI** | `npx skills add rebecha1227-a11y/fund-lab -a gemini-cli` |
@@ -104,7 +104,7 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 
 | 安装范围 | 典型路径 |
 |----------|----------|
-| 全局（Cursor） | `~/.cursor/skills/fund-lab/` |
+| 全局（你的 AI agent） | `~/.cursor/skills/fund-lab/` |
 | 当前项目 | `.cursor/skills/fund-lab/` 或 `.agents/skills/fund-lab/` |
 
 skill 包里包含：`SKILL.md`、`references/`、`templates/`、**`dashboard.html`（本地看板）**。  
@@ -116,13 +116,13 @@ skill 包里包含：`SKILL.md`、`references/`、`templates/`、**`dashboard.ht
 
 ### 第 1 步：准备你的工作区文件夹
 
-在电脑上新建或选一个文件夹，例如 `我的基金档案`，用 Cursor **打开这个文件夹**。
+在电脑上新建或选一个文件夹，例如 `我的基金档案`，在你的 AI agent 里**打开这个文件夹**作为工作区。
 
 你的私人数据都会放在这里的 `assets/` 目录，**不会上传到 GitHub**。
 
 ### 第 2 步：初始化
 
-在 Cursor 聊天框输入：
+在你的 AI agent 聊天框输入：
 
 ```
 /fund-lab 初始化
@@ -145,15 +145,24 @@ open ~/.cursor/skills/fund-lab/dashboard.html
 
 ### 第 4 步：日常使用
 
-```
-/fund-lab 透视              # 看持仓结构与缺口
-/fund-lab 环境              # 生成本周市场简报
-/fund-lab 更新今日快照       # 写入今日收益
-/fund-lab 复盘              # 写复盘日记
-/fund-lab 更新持仓           # 买卖后更新持仓
-```
+在你的 AI agent 聊天框输入 `/fund-lab` + 意图词。完整命令如下：
 
-完整命令列表见 skill 内的 `SKILL.md`。
+| 命令 | 做什么 |
+|------|--------|
+| `/fund-lab 初始化` | 第一次建档：平台、持仓、收益口径 |
+| `/fund-lab 体检` | 亏损体检：我为什么亏 |
+| `/fund-lab 透视` | 持仓透视：手里有什么、缺什么 |
+| `/fund-lab 环境` | 本周市场简报，对照自己的组合 |
+| `/fund-lab 更新今日快照` | 记录今日收益，更新看板日历/曲线 |
+| `/fund-lab 纪律` | 制定或检查投资纪律规则 |
+| `/fund-lab 止盈止损` | 同上（纪律引擎） |
+| `/fund-lab 复盘` | 写复盘日记，检查是否守住纪律 |
+| `/fund-lab 压力测试` | 大跌时组合扛不扛得住 |
+| `/fund-lab 模拟` | 调整配置的情景模拟（what-if） |
+| `/fund-lab 词典 某术语` | 解释基金术语，并追加到你的个性化词典 |
+| `/fund-lab 更新持仓` | 买卖、定投后更新份额与结构 |
+
+**你的 AI agent 没有 `/fund-lab` 斜杠命令？** 用自然语言说同样意思即可，例如「按 fund-lab 帮我做持仓透视」「更新今日快照」。
 
 ---
 
