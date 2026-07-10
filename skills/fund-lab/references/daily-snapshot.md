@@ -29,8 +29,8 @@
 | 时机 | 做什么 |
 |------|--------|
 | 每个交易日收盘后 | 发「当日收益」截图 → `/fund-lab 更新今日快照` |
-| 各平台总资产有更新时 | 顺带更新 `total_assets`、`holding_profit`、`accum_profit` |
-| 有大额交易/转换确认后 | 快照 + `/fund-lab 更新持仓` |
+| 各平台资产页有更新时 | 重置 `portfolio-template.md`「**平台收益锚点**」表（持有/累计分列） |
+| 有大额交易/转换确认后 | 快照 + `/fund-lab 更新持仓` + **重置锚点** |
 | 周末 | 可不更新；看板日历周末格显示 `0.00`（灰色） |
 
 ---
@@ -52,10 +52,23 @@
 | `daily_profit` | **用户主口径**的当日组合盈亏（在 onboarding 中已确认来源） |
 | `yesterday_profit` | 通常由**前一行** `daily_profit` 推导；必要时可填 |
 | `total_assets` | 用户定义的组合总资产（多平台则合计，口径与 portfolio 一致） |
-| `holding_profit` / `accum_profit` | 与 portfolio 基本情况一致 |
+| `holding_profit` / `accum_profit` | **优先自动计算**（见下「平台锚点滚动公式」）；写入快照行时与看板一致 |
 | `tech_ratio` / `defense_ratio` | 来自 portfolio 赌注群汇总 |
 
 **禁止**：把不同 App 的「昨日收益」与「当日收益」混加成一个 KPI。
+
+### 平台锚点滚动公式（持有 / 累计自动计算）
+
+`portfolio-template.md` 维护「**平台收益锚点**」表：各平台 **持有收益、累计收益、锚点日期**（来自 App 资产页）。
+
+```
+双平台持有(某日) = Σ 各平台持有(锚点日) + Σ daily_profit(锚点日+1 … 该日)
+双平台累计(某日) = Σ 各平台累计(锚点日) + Σ daily_profit(锚点日+1 … 该日)
+```
+
+- **你只需偶尔更新锚点**（发两平台持有/累计截图）；**每日只更新 `daily_profit`**，看板自动滚动持有/累计。
+- 写入 `daily-snapshots` 时，`holding_profit` / `accum_profit` 按上式算出填入（与看板一致）。
+- **赎回/转换确认后**必须重置锚点（否则滚动会偏）。
 
 ---
 
@@ -81,7 +94,8 @@
 
 ## 五、同步 portfolio（按需）
 
-若更新了总资产或持有/累计收益，同步 `portfolio-template.md`「基本情况」。
+若更新了总资产，同步 `portfolio-template.md`「基本情况」。  
+若用户提供了各平台持有/累计截图，更新「**平台收益锚点**」表并重算基本情况里的合计。
 
 ---
 

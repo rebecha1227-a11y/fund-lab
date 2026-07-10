@@ -1697,6 +1697,72 @@
       return m ? Number(m[0].replace("%", "")) : null;
     }
 
+    function parsePlatformProfitAnchor(lines) {
+      const start = lines.findIndex(l => /##\s*平台收益锚点/.test(l));
+      if (start < 0) return null;
+      const platforms = [];
+      for (let i = start + 1; i < Math.min(lines.length, start + 24); i++) {
+        const line = lines[i];
+        if (/^## /.test(line)) break;
+        if (!/^\|/.test(line)) continue;
+        const parts = line.split("|").map(s => s.trim()).filter(Boolean);
+        if (parts.length < 4 || parts[0] === "平台" || /^-+$/.test(parts[0])) continue;
+        const dateMatch = parts[3].match(/(\d{4}-\d{2}-\d{2})/);
+        platforms.push({
+          name: parts[0],
+          holding: parseNumber(parts[1]),
+          accum: parseNumber(parts[2]),
+          date: dateMatch ? dateMatch[1] : null
+        });
+      }
+      if (!platforms.length) return null;
+      const anchorDate = platforms.map(p => p.date).filter(Boolean).sort().pop();
+      let holdingBaseline = 0;
+      let accumBaseline = 0;
+      let hasHolding = false;
+      let hasAccum = false;
+      for (const p of platforms) {
+        if (p.holding != null) { holdingBaseline += p.holding; hasHolding = true; }
+        if (p.accum != null) { accumBaseline += p.accum; hasAccum = true; }
+      }
+      if (!anchorDate || (!hasHolding && !hasAccum)) return null;
+      return { anchorDate, holdingBaseline, accumBaseline, hasHolding, hasAccum, platforms };
+    }
+
+    function sumDailyProfitBetween(rows, exclusiveStartDate, inclusiveEndDate) {
+      if (!exclusiveStartDate || !inclusiveEndDate || inclusiveEndDate <= exclusiveStartDate) return 0;
+      let sum = 0;
+      for (const row of rows) {
+        if (!row?.date) continue;
+        if (row.date <= exclusiveStartDate || row.date > inclusiveEndDate) continue;
+        const dp = row.daily_profit;
+        if (dp != null && !Number.isNaN(dp)) sum += dp;
+      }
+      return sum;
+    }
+
+    function computeRolledPlatformProfits(anchor, rows, asOfDate) {
+      if (!anchor?.anchorDate || !asOfDate || asOfDate < anchor.anchorDate) {
+        return { holding: null, accum: null, rollDelta: 0 };
+      }
+      const rollDelta = sumDailyProfitBetween(rows, anchor.anchorDate, asOfDate);
+      return {
+        holding: anchor.hasHolding ? anchor.holdingBaseline + rollDelta : null,
+        accum: anchor.hasAccum ? anchor.accumBaseline + rollDelta : null,
+        rollDelta
+      };
+    }
+
+    function resolveProfitAsOfDate(rows, today, todayRow, yesterdayRow) {
+      const todayHasDaily = todayRow && resolveTodayDailyProfit(todayRow, yesterdayRow) != null;
+      if (todayHasDaily) return today;
+      if (yesterdayRow?.date) return yesterdayRow.date;
+      for (let i = rows.length - 1; i >= 0; i--) {
+        if (rows[i]?.daily_profit != null && rows[i]?.date) return rows[i].date;
+      }
+      return today;
+    }
+
     function parsePortfolio(md) {
       const result = {
         totals: {},
@@ -1743,6 +1809,7 @@
           if (/短期要用钱占比/.test(line)) result.totals.shortNeed = line.split("|")[2]?.trim();
         }
       }
+      result.platformProfitAnchor = parsePlatformProfitAnchor(lines);
 
       // DCA plans table
       const planStart = lines.findIndex(l => l.includes("## 定投计划"));
@@ -2497,24 +2564,39 @@
         todayRow?.yesterday_profit ??
         yesterdayRow?.daily_profit ??
         null;
-      const holdingProfit =
+      const holdingProfitFallback =
         todayRow?.holding_profit ??
         snap?.holding_profit ??
         lastNonNull("holding_profit") ??
         p.holdingProfit ??
         null;
-      const accumProfit =
+      const accumProfitFallback =
         todayRow?.accum_profit ??
         snap?.accum_profit ??
         lastNonNull("accum_profit") ??
         p.accumProfit ??
         null;
+      const anchor = portfolio?.platformProfitAnchor ?? null;
+      let holdingProfit = holdingProfitFallback;
+      let accumProfit = accumProfitFallback;
+      let profitRollNote = "";
+      if (anchor) {
+        const asOfDate = resolveProfitAsOfDate(rows, today, todayRow, yesterdayRow);
+        const rolled = computeRolledPlatformProfits(anchor, rows, asOfDate);
+        if (rolled.holding != null) holdingProfit = rolled.holding;
+        if (rolled.accum != null) accumProfit = rolled.accum;
+        if (rolled.rollDelta !== 0) {
+          profitRollNote = `；持有/累计已含锚点(${anchor.anchorDate})后滚动 ${formatMoney(rolled.rollDelta)}`;
+        } else {
+          profitRollNote = `；持有/累计锚点 ${anchor.anchorDate}`;
+        }
+      }
       const sources = [];
       if (todayRow?.total_assets != null || todayRow?.daily_profit != null) sources.push("daily-snapshots");
       else if (snap?.total_assets != null || snap?.daily_profit != null) sources.push("daily-snapshots");
       if (p.alipayTotal != null || p.nanfangTotal != null || p.total != null) sources.push("portfolio-template");
       const sourceNote = sources.length
-        ? `数据口径：支付宝 + 南方基金；来源 ${[...new Set(sources)].join(" + ")}`
+        ? `数据口径：支付宝 + 南方基金；来源 ${[...new Set(sources)].join(" + ")}${profitRollNote}`
         : "数据口径：支付宝 + 南方基金；请更新 portfolio-template.md 或 daily-snapshots.md";
       return { total, todayProfit, yesterdayProfit, holdingProfit, accumProfit, sourceNote };
     }
@@ -2872,8 +2954,16 @@
       }
     }
 
-    function renderCalDayDetail(row, dateStr) {
+    function renderCalDayDetail(row, dateStr, allRows) {
       const root = $("calDayDetail");
+      const anchor = appState.parsed?.portfolio?.platformProfitAnchor;
+      let holding = row?.holding_profit ?? null;
+      let accum = row?.accum_profit ?? null;
+      if (anchor && dateStr && dateStr >= anchor.anchorDate) {
+        const rolled = computeRolledPlatformProfits(anchor, allRows || [], dateStr);
+        if (rolled.holding != null) holding = rolled.holding;
+        if (rolled.accum != null) accum = rolled.accum;
+      }
       if (!row) {
         root.innerHTML = `<div class="title">${esc(dateStr)} 当日收益明细</div><div class="muted">暂无记录（可能支付宝尚未更新或未写入 daily-snapshots）</div>`;
         return;
@@ -2882,8 +2972,8 @@
         <div class="title">${esc(dateStr)} 当日收益明细</div>
         <div>当日收益：<span class="${profitClass(row.daily_profit)}">${row.daily_profit == null ? "未更新" : formatMoney(row.daily_profit)}</span></div>
         <div>昨日收益（结转）：<span class="${profitClass(row.yesterday_profit)}">${row.yesterday_profit == null ? "—" : formatMoney(row.yesterday_profit)}</span></div>
-        <div>持有收益：<span class="${profitClass(row.holding_profit)}">${row.holding_profit == null ? "—" : formatMoney(row.holding_profit)}</span></div>
-        <div>累计收益：<span class="${profitClass(row.accum_profit)}">${row.accum_profit == null ? "—" : formatMoney(row.accum_profit)}</span></div>
+        <div>持有收益：<span class="${profitClass(holding)}">${holding == null ? "—" : formatMoney(holding)}</span></div>
+        <div>累计收益：<span class="${profitClass(accum)}">${accum == null ? "—" : formatMoney(accum)}</span></div>
         <div>总资产：<span>${row.total_assets == null ? "—" : formatMoney(row.total_assets)}</span></div>
         <div class="muted">状态：${esc(row.data_status || "—")}</div>
       `;
@@ -2937,7 +3027,7 @@
         };
       });
       const selected = appState.calView.selectedDate || today;
-      renderCalDayDetail(map[selected], selected);
+      renderCalDayDetail(map[selected], selected, list);
     }
 
     function setProfitViewMode(mode) {
