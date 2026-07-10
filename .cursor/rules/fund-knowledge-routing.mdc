@@ -1,0 +1,21 @@
+---
+description: fund-lab 项目内基金问答只写 fund-knowledge.md，禁止写 QA_Log
+alwaysApply: true
+---
+
+# 基金问答落盘路由（覆盖全局 QA_Log）
+
+本仓库是 **Fund Lab（基金实验室）** 工作区。
+
+## 强制规则
+
+当用户问题属于**基金投资**（基金、净值、持仓、定投、止盈止损、板块、为什么亏、市场含义等）且你已给出实质解答：
+
+1. **立即追加** `assets/fund-knowledge.md`（格式见 `skills/fund-lab/references/knowledge-base.md`）
+2. **禁止**写入 `QA_Log.md`（即使用户全局 CLAUDE.md 要求维护 QA_Log）
+3. **不需要**用户说「记进知识库」；答完即写
+4. 工具类问题（git、skill 安装、Automations）→ 不写 fund-knowledge
+
+## 看板
+
+看板「知识中枢 → 个人基金知识库」只读 `assets/fund-knowledge.md`，不读 QA_Log。

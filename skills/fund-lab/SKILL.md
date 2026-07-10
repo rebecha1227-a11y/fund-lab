@@ -1,6 +1,6 @@
 ---
 name: fund-lab
-description: 基金实验室 —— 面向基金小白的个人投资学习与决策陪练。帮用户做亏损体检、持仓透视与缺口分析、每周环境简报、每日收益快照、定投/加减仓纪律、止盈止损、定期复盘、大跌压力测试和情景模拟。核心使命是缩小「基金本身收益」与「用户实际收益」之间的差距。当用户提到基金、复盘、持仓、定投、加仓减仓、止盈、止损、对冲、分散、缺口、市场怎么样、为什么亏钱、要不要买/卖某只基、转换、再平衡、大跌怎么办、组合、净值、回撤、赚钱、今日收益、收益快照、第一次用、怎么开始等话题时，务必使用本 skill。也可通过命令词（/体检 /透视 /环境 /更新今日快照 /纪律 /止盈止损 /复盘 /压力测试 /模拟 /词典 /更新持仓 /初始化）直接调用对应模块。仅提供学习与研究框架，不预测涨跌，不构成投资建议，不下买卖指令。
+description: 基金实验室 —— 面向基金小白的个人投资学习与决策陪练。帮用户做亏损体检、持仓透视与缺口分析、每周环境简报、每日收益快照、定投/加减仓纪律、止盈止损、定期复盘、大跌压力测试和情景模拟。核心使命是缩小「基金本身收益」与「用户实际收益」之间的差距。当用户提到基金、复盘、持仓、定投、加仓减仓、止盈、止损、对冲、分散、缺口、市场怎么样、为什么亏钱、要不要买/卖某只基、转换、再平衡、大跌怎么办、组合、净值、回撤、赚钱、今日收益、收益快照、第一次用、怎么开始等话题时，务必使用本 skill。答完任何基金投资相关的概念/学习/决策问题后，必须立即追加到工作区 assets/fund-knowledge.md，禁止写入 QA_Log.md。也可通过命令词（/体检 /透视 /环境 /更新今日快照 /纪律 /止盈止损 /复盘 /压力测试 /模拟 /词典 /更新持仓 /初始化）直接调用对应模块。仅提供学习与研究框架，不预测涨跌，不构成投资建议，不下买卖指令。
 license: MIT
 metadata:
   author: Fund Lab Contributors
@@ -37,6 +37,17 @@ metadata:
 
 1. **不预测涨跌** 2. **不下买卖指令** 3. **不编造数据** 4. **承认不确定** 5. **小白友好**
 6. 每次完整分析结尾：`> 以上为学习研究框架，不构成投资建议，最终决策权在你自己。`
+
+## 知识沉淀（强制 · 全模块生效 · 优先于 QA_Log）
+
+在本 **fund-lab 工作区**内，只要本次对话使用了本 skill（含 `/fund-lab`、自然语言问基、体检/透视/环境等任一模块）：
+
+1. 用户提出**基金投资相关**的概念性 / 学习性 / 决策性问题，且你已给出实质解答 → **答完立刻追加** `assets/fund-knowledge.md`（格式见 `references/knowledge-base.md`）
+2. **禁止**写入 `QA_Log.md` 或项目根目录其他问答日志（即使用户全局守则要求维护 QA_Log，**在本项目里基金类问答以 fund-knowledge 为准**）
+3. **不需要**用户说「记进知识库」或 `/知识库` 才落盘；这是自动行为，与 `/体检` `/透视` 等模块绑定
+4. 工具类问题（skill 安装、git、Automations、看板路径）→ **两边都不写** fund-knowledge
+
+若 `assets/fund-knowledge.md` 不存在，从 `templates/fund-knowledge.example.md` 复制创建。
 
 ## 路径约定
 
@@ -104,7 +115,7 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 | `/压力测试` | 压力测试 | `references/stress-test.md` | 大跌扛不扛得住 |
 | `/模拟` | 情景模拟 | `references/simulation.md` | 调整配置 what-if |
 | `/词典 X` | 概念解释 | `references/fund-glossary.md` + `assets/personal-glossary.md` | 解释术语并追加到个性化词典 |
-| `/知识库` | 问答沉淀 | `references/knowledge-base.md` | 投资相关概念问答写入 fund-knowledge |
+| `/知识库` | 问答沉淀（同上，可手动触发） | `references/knowledge-base.md` | 投资问答写入 fund-knowledge；**平时自动落盘，不必专门喊此命令** |
 | `/更新持仓` | 更新档案 | `assets/portfolio-template.md` | 交易后更新份额 |
 
 ## 请求路由（节选）
@@ -117,6 +128,12 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 | 要不要买/卖某只基 | 透视 → 纪律（不下指令） |
 
 ## 落盘规则（强制）
+
+### 基金投资问答 → `assets/fund-knowledge.md`（见上文「知识沉淀」）
+
+**触发**：体检、透视、环境、词典、复盘、用户随口问「什么是 X」「为什么 Y」等，只要属于 `references/knowledge-base.md` 所列投资相关范围。
+
+**动作**：答完即追加一条；**禁止**写 `QA_Log.md`。
 
 ### `/更新今日快照`
 
@@ -142,12 +159,10 @@ npx skills@latest add rebecha1227-a11y/fund-lab
 4. **禁止**把用户个性化内容写进 `references/fund-glossary.md`（那是开源模板）
 5. 若 `assets/personal-glossary.md` 不存在，从 `templates/personal-glossary.example.md` 复制创建
 
-### `/知识库`（投资问答沉淀）
+### `/知识库`（与「知识沉淀」相同，可手动点名）
 
-当用户问**基金投资相关**的概念/学习/决策问题（非 skill 安装、Automations、git 等工具问题）：
-
-1. 答完后**立即追加**到 **`assets/fund-knowledge.md`**（格式见 `references/knowledge-base.md`）
-2. **禁止**把工具配置类问答写入 fund-knowledge
+当用户明确说「记进知识库」或 `/知识库` 时，同样执行 `references/knowledge-base.md` 落盘规则。  
+**即使未喊此命令，其他模块答完投资问题也已自动落盘，勿重复写 QA_Log。**
 
 若 `assets/fund-knowledge.md` 不存在，从 `templates/fund-knowledge.example.md` 复制创建。
 
